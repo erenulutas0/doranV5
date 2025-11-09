@@ -1,0 +1,73 @@
+server:
+  port: 8085  # Notification Service'in portu
+
+spring:
+  application:
+    name: notification-service  # Eureka'da görünecek servis adı
+  
+  datasource:
+    # PostgreSQL veritabanı bağlantısı
+    url: jdbc:postgresql://localhost:5432/notification_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres  # PostgreSQL kullanıcı adı (kendi şifrenizi girin)
+    password: postgres  # PostgreSQL şifresi (kendi şifrenizi girin)
+    # Connection pool ayarları
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update  # Tabloları otomatik güncelle
+    show-sql: true  # SQL sorgularını console'da göster
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # RabbitMQ Yapılandırması
+  # Message Queue için (asenkron iletişim)
+  rabbitmq:
+    host: localhost  # RabbitMQ server adresi
+    port: 5672  # RabbitMQ portu
+    username: guest  # Default kullanıcı adı
+    password: guest  # Default şifre
+    # Listener ayarları
+    listener:
+      simple:
+        acknowledge-mode: auto  # Mesajlar otomatik olarak acknowledge edilir
+        retry:
+          enabled: true  # Hata durumunda retry aktif
+          initial-interval: 1000  # İlk retry 1 saniye sonra
+          max-attempts: 3  # Maksimum 3 deneme
+          multiplier: 2  # Her retry'da süre 2 katına çıkar (1s, 2s, 4s)
+
+# Eureka yapılandırması
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Service Registry'nin adresi
+
+# Swagger/OpenAPI Yapılandırması
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  info:
+    title: Notification Service API
+    description: Notification Management Microservice - Bildirim yönetimi API dokümantasyonu
+    version: 1.0.0
+    contact:
+      name: Microservices Team
+      email: support@microservices.com

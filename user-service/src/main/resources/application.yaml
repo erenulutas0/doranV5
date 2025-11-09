@@ -1,0 +1,57 @@
+server:
+  port: 8081  # User Service'in portu
+
+spring:
+  application:
+    name: user-service  # Eureka'da görünecek servis adı
+  
+  datasource:
+    # PostgreSQL veritabanı bağlantısı
+    url: jdbc:postgresql://localhost:5432/user_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres  # PostgreSQL kullanıcı adı (kendi şifrenizi girin)
+    password: postgres  # PostgreSQL şifresi (kendi şifrenizi girin)
+    # Connection pool ayarları
+    hikari:
+      maximum-pool-size: 10  # Maksimum connection sayısı
+      minimum-idle: 5  # Minimum boşta bekleyen connection
+      connection-timeout: 30000  # Connection timeout (ms)
+      idle-timeout: 600000  # Idle connection timeout (ms)
+      max-lifetime: 1800000  # Connection max lifetime (ms)
+  
+  jpa:
+    hibernate:
+      ddl-auto: update  # Tabloları otomatik güncelle (create-drop yerine, production için daha güvenli)
+    show-sql: true  # SQL sorgularını console'da göster
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true  # SQL sorgularını formatla
+        jdbc:
+          batch_size: 20  # Batch insert/update için
+        order_inserts: true  # Insert'leri sırala
+        order_updates: true  # Update'leri sırala
+
+# Eureka yapılandırması
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Service Registry'nin adresi
+
+# Swagger/OpenAPI Yapılandırması
+springdoc:
+  api-docs:
+    path: /api-docs  # OpenAPI JSON endpoint
+  swagger-ui:
+    path: /swagger-ui.html  # Swagger UI endpoint
+    enabled: true
+    tags-sorter: alpha  # Tag'leri alfabetik sırala
+    operations-sorter: alpha  # Operation'ları alfabetik sırala
+  info:
+    title: User Service API
+    description: User Management Microservice - Kullanıcı yönetimi API dokümantasyonu
+    version: 1.0.0
+    contact:
+      name: Microservices Team
+      email: support@microservices.com
+

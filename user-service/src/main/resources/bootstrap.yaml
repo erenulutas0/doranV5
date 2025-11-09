@@ -1,0 +1,16 @@
+# Bootstrap Yapılandırması (Config Server bağlantısı için)
+# Bu dosya application.yaml'dan ÖNCE yüklenir
+
+spring:
+  application:
+    name: user-service  # Config Server'da bu isimle yapılandırma aranır
+  
+  cloud:
+    config:
+      uri: http://localhost:8888  # Config Server adresi
+      fail-fast: true  # Config Server bulunamazsa servis başlamasın
+      retry:
+        initial-interval: 1000  # İlk retry 1 saniye sonra
+        max-attempts: 6  # Maksimum 6 deneme
+        multiplier: 1.1  # Her retry'da süre %10 artar
+

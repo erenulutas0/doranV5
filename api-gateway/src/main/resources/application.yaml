@@ -1,0 +1,195 @@
+server:
+  port: 8080  # Gateway'in portu
+
+spring:
+  application:
+    name: api-gateway  # Servis adı
+  
+  # Redis yapılandırması (Rate Limiting için)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:  # Şifre yoksa boş bırakın
+      timeout: 2000ms  # Connection timeout
+  
+  cloud:
+    gateway:
+      # Global CORS yapılandırması
+      globalcors:
+        cors-configurations:
+          '[/**]':  # Tüm path'ler için
+            # allowedOrigins: "*"  # allowCredentials: true ile kullanılamaz
+            allowedOriginPatterns: "*"  # Pattern kullanarak tüm origin'lere izin ver
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true  # Credentials'a izin ver
+            maxAge: 3600  # Preflight cache süresi (saniye)
+      
+      # Default filters (tüm route'lar için geçerli)
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3  # 3 kez tekrar dene
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE  # Bu status kodlarında retry yap
+            methods: GET,POST  # Sadece GET ve POST için retry
+            backoff:
+              firstBackoff: 50ms  # İlk retry 50ms sonra
+              maxBackoff: 500ms  # Maksimum 500ms bekle
+              factor: 2  # Her retry'de bekleme süresini 2 katına çıkar
+              basedOnPreviousValue: false
+        
+      routes:
+        # User Service route
+        # /api/users/** ile başlayan istekler user-service'e gider
+        - id: user-service
+          uri: lb://user-service  # lb = load balancer, Eureka'dan adres alır
+          predicates:
+            - Path=/api/users/**  # Bu path ile başlayan istekler
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /users/** kalır
+            # Rate Limiting
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20  # User service için daha yüksek limit
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            # CircuitBreaker
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/user
+        
+        # Product Service route
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır
+            # Rate Limiting (Product Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Product service için daha yüksek limit
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback/product
+        
+        # Order Service route
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır
+            # Rate Limiting (Order Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 15  # Order service için orta limit
+                redis-rate-limiter.burstCapacity: 30
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/order
+        
+        # Inventory Service route
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır
+            # Rate Limiting (Inventory Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 25  # Inventory service için yüksek limit
+                redis-rate-limiter.burstCapacity: 50
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: inventoryServiceCircuitBreaker
+                fallbackUri: forward:/fallback/inventory
+        
+        # Notification Service route
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır
+            # Rate Limiting (Notification Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20  # Notification service için orta limit
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+
+# Eureka yapılandırması
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Service Registry'nin adresi
+
+# Resilience4j Circuit Breaker Yapılandırması (Gateway seviyesinde)
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - java.util.concurrent.TimeoutException
+    instances:
+      userServiceCircuitBreaker:
+        baseConfig: default
+      productServiceCircuitBreaker:
+        baseConfig: default
+      orderServiceCircuitBreaker:
+        baseConfig: default
+      inventoryServiceCircuitBreaker:
+        baseConfig: default
+      notificationServiceCircuitBreaker:
+        baseConfig: default
+
+# Actuator endpoints (Monitoring için)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,metrics  # Gateway routes'ları görmek için
+      base-path: /actuator  # Actuator base path
+  endpoint:
+    gateway:
+      enabled: true  # Gateway endpoint'ini aktif et
+    health:
+      show-details: always  # Health check detaylarını göster
+  metrics:
+    export:
+      prometheus:
+        enabled: true  # Prometheus metrics (opsiyonel)

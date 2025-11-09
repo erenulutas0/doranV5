@@ -1,0 +1,57 @@
+server:
+  port: 8082  # Product Service'in portu
+
+spring:
+  application:
+    name: product-service  # Eureka'da görünecek servis adı
+  
+  datasource:
+    # PostgreSQL veritabanı bağlantısı
+    url: jdbc:postgresql://localhost:5432/product_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres  # PostgreSQL kullanıcı adı (kendi şifrenizi girin)
+    password: postgres  # PostgreSQL şifresi (kendi şifrenizi girin)
+    # Connection pool ayarları
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update  # Tabloları otomatik güncelle
+    show-sql: true  # SQL sorgularını console'da göster
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# Eureka yapılandırması
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Service Registry'nin adresi
+
+# Swagger/OpenAPI Yapılandırması
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  info:
+    title: Product Service API
+    description: Product Management Microservice - Ürün yönetimi API dokümantasyonu
+    version: 1.0.0
+    contact:
+      name: Microservices Team
+      email: support@microservices.com
+

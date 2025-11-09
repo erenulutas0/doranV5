@@ -1,0 +1,16 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: service-registry
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false # Bu servisin kendisini Eureka'ya kaydetmesini istemiyoruz
+    fetch-registry: false # Bu servis, registry olduğu için başka bir registry'den kayıt çekmez.
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+

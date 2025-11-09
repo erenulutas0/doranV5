@@ -1,0 +1,41 @@
+server:
+  port: 8888  # Config Server'ın portu (Spring Cloud Config Server default portu)
+
+spring:
+  application:
+    name: config-server  # Eureka'da görünecek servis adı
+  
+  # Native profile aktif (local file system kullan)
+  profiles:
+    active: native
+  
+  # Config Server Yapılandırması
+  cloud:
+    config:
+      server:
+        # Local file system kullan (development için)
+        # Production'da Git repository kullanılabilir
+        native:
+          search-locations: file:///${user.home}/config-repo
+        # Git repository kullanmak için (opsiyonel):
+        # git:
+        #   uri: https://github.com/your-username/config-repo
+        #   default-label: main
+        #   clone-on-start: true  # Başlangıçta repository'yi klonla
+
+# Eureka yapılandırması
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Service Registry'nin adresi
+
+# Actuator endpoints (Monitoring için)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh  # Config Server endpoint'leri
+  endpoint:
+    health:
+      show-details: always
+

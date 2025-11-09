@@ -1,0 +1,23 @@
+# Test için özel yapılandırma
+# Test sırasında bu dosya kullanılır
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb  # Test için in-memory H2
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Her test için tabloları oluştur/sil
+    show-sql: false  # Test sırasında SQL gösterme (daha temiz output)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+# Eureka'yı test sırasında devre dışı bırak
+eureka:
+  client:
+    enabled: false  # Test sırasında Eureka'ya bağlanma
+
