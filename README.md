@@ -54,6 +54,7 @@ Bu proje, bir e-ticaret sistemi için tam özellikli microservices mimarisini i�
 - **SpringDoc OpenAPI (Swagger)** - API Documentation
 - **Spring Boot Actuator** - Monitoring & Health Checks
 - **Micrometer Tracing + Zipkin** - Distributed Tracing
+- **Flyway** - Database Migration & Versioning
 - **Lombok** - Boilerplate Code Reduction
 
 ## 📋 Özellikler
@@ -74,6 +75,7 @@ Bu proje, bir e-ticaret sistemi için tam özellikli microservices mimarisini i�
 - [x] Health Checks (Actuator)
 - [x] Distributed Tracing (Micrometer Tracing + Zipkin)
 - [x] Docker & Docker Compose
+- [x] Database Migration (Flyway)
 - [x] Global Exception Handling
 - [x] Comprehensive Testing
 
@@ -81,6 +83,7 @@ Bu proje, bir e-ticaret sistemi için tam özellikli microservices mimarisini i�
 
 - [x] Distributed Tracing (Micrometer Tracing + Zipkin) ✅
 - [x] Docker & Docker Compose ✅
+- [x] Database Migration (Flyway) ✅
 - [ ] Kubernetes Deployment
 - [ ] Security (JWT Authentication)
 - [ ] Logging & Monitoring (ELK Stack)
