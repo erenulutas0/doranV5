@@ -1,0 +1,26 @@
+# Zipkin Server - Distributed Tracing
+# Kullanım: docker-compose -f docker-compose-zipkin.yml up -d
+
+version: '3.8'
+
+services:
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"  # Zipkin UI port
+    environment:
+      - STORAGE_TYPE=mem  # In-memory storage (production'da Elasticsearch kullanılabilir)
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  microservices-network:
+    driver: bridge
+

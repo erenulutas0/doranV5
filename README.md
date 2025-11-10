@@ -53,6 +53,7 @@ Bu proje, bir e-ticaret sistemi için tam özellikli microservices mimarisini i�
 - **Feign Client** - Inter-service Communication
 - **SpringDoc OpenAPI (Swagger)** - API Documentation
 - **Spring Boot Actuator** - Monitoring & Health Checks
+- **Micrometer Tracing + Zipkin** - Distributed Tracing
 - **Lombok** - Boilerplate Code Reduction
 
 ## 📋 Özellikler
@@ -71,12 +72,13 @@ Bu proje, bir e-ticaret sistemi için tam özellikli microservices mimarisini i�
 - [x] PostgreSQL Migration
 - [x] API Documentation (Swagger/OpenAPI)
 - [x] Health Checks (Actuator)
+- [x] Distributed Tracing (Micrometer Tracing + Zipkin)
 - [x] Global Exception Handling
 - [x] Comprehensive Testing
 
 ### 🚧 Eksik Özellikler
 
-- [ ] Distributed Tracing (Sleuth + Zipkin)
+- [x] Distributed Tracing (Micrometer Tracing + Zipkin) ✅
 - [ ] Docker & Docker Compose
 - [ ] Kubernetes Deployment
 - [ ] Security (JWT Authentication)
@@ -179,6 +181,9 @@ Her servis için health check:
 
 ### RabbitMQ Management
 `http://localhost:15672` (guest/guest)
+
+### Zipkin UI (Distributed Tracing)
+`http://localhost:9411`
 
 ## 🧪 Test Scripts
 

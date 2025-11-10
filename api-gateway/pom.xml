@@ -46,6 +46,20 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Micrometer Tracing (Distributed Tracing) -->
+        <!-- Spring Boot 3'te Sleuth yerine Micrometer Tracing kullanılıyor -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+
+        <!-- Zipkin Reporter -->
+        <!-- Trace'leri Zipkin server'a göndermek için -->
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+        </dependency>
+
         <!-- Redis (Rate Limiting için) -->
         <!-- Rate limiting için Redis kullanılacak (opsiyonel: in-memory de kullanılabilir) -->
         <dependency>
