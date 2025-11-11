@@ -18,7 +18,8 @@ class _SplashPageState extends State<SplashPage> {
   void _navigateToHome() async {
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      context.go('/home');
+      // Guest-First akışı: Onboarding'e yönlendir
+      context.go('/onboarding');
     }
   }
 

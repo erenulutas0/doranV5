@@ -83,37 +83,50 @@ class _BannerCarouselState extends State<BannerCarousel> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          banner['title'] as String,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 18 : 24,
+                        // Birleştirilmiş metin - daha kompakt ve vurgulu
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: banner['title'] as String,
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 22 : 28,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' ${banner['subtitle'] as String}',
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 20 : 26,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: isMobile ? 4 : 6),
-                        Text(
-                          banner['subtitle'] as String,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: isMobile ? 11 : 16,
-                          ),
-                        ),
-                        SizedBox(height: isMobile ? 8 : 12),
+                        SizedBox(height: isMobile ? 12 : 16),
+                        // Yüksek kontrastlı "Shop Now" butonu
                         ElevatedButton(
                           onPressed: () {
                             // Navigate to products
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: banner['color'] as Color,
-                            elevation: 0,
+                            backgroundColor: const Color(0xFFFFD700), // Açık sarı - yüksek kontrast
+                            foregroundColor: const Color(0xFF1A1A1A), // Koyu metin
+                            elevation: 2,
                             padding: EdgeInsets.symmetric(
-                              horizontal: isMobile ? 14 : 24,
-                              vertical: isMobile ? 8 : 14,
+                              horizontal: isMobile ? 20 : 28,
+                              vertical: isMobile ? 12 : 16,
                             ),
                             textStyle: TextStyle(
-                              fontSize: isMobile ? 11 : 14,
+                              fontSize: isMobile ? 13 : 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: const Text('Shop Now'),
@@ -131,11 +144,12 @@ class _BannerCarouselState extends State<BannerCarousel> {
           controller: _pageController,
           count: banners.length,
           effect: WormEffect(
-            dotColor: Theme.of(context).dividerColor,
+            dotColor: Theme.of(context).dividerColor.withOpacity(0.5),
             activeDotColor: Theme.of(context).colorScheme.primary,
-            dotHeight: 8,
-            dotWidth: 8,
-            spacing: 8,
+            dotHeight: 10, // Daha büyük
+            dotWidth: 10, // Daha büyük
+            spacing: 10, // Daha fazla boşluk
+            radius: 5,
           ),
         ),
       ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/cart_provider.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/price_formatter.dart';
 
 class CartPage extends StatelessWidget {
@@ -215,9 +216,23 @@ class _CartSummary extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigate to checkout
+                  // Guest kontrolü: Eğer guest mode'daysa login'e yönlendir
+                  final authProvider = context.read<AuthProvider>();
+                  if (authProvider.requiresAuthentication()) {
+                    // Login sayfasına yönlendir, geri dönüş için callback ekle
+                    context.push('/login').then((_) {
+                      // Login başarılı olduysa checkout'a devam et
+                      if (authProvider.isAuthenticated) {
+                        // Navigate to checkout
+                        // TODO: Checkout sayfasına yönlendir
+                      }
+                    });
+                  } else {
+                    // Navigate to checkout
+                    // TODO: Checkout sayfasına yönlendir
+                  }
                 },
-                child: const Text('Proceed to Checkout'),
+                child: const Text('Sepeti Onayla'),
               ),
             ),
           ],

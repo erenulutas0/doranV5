@@ -30,8 +30,8 @@ class SearchBarWidget extends StatelessWidget {
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            size: isMobile ? 20 : 24,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), // Daha koyu renk - daha iyi kontrast
+            size: isMobile ? 22 : 26, // Biraz daha büyük
           ),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(

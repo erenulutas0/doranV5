@@ -17,8 +17,8 @@ class AppTheme {
   static const Color onSurface = Color(0xFF1C1B1F);
   static const Color onSurfaceVariant = Color(0xFF49454F);
   
-  // Background Colors
-  static const Color backgroundColor = Color(0xFFFFFBFE);
+  // Background Colors - Saf beyaz arka plan
+  static const Color backgroundColor = Color(0xFFFFFFFF); // Saf beyaz
   static const Color onBackground = Color(0xFF1C1B1F);
   
   // Text Colors
@@ -58,8 +58,8 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       
-      // Scaffold Theme
-      scaffoldBackgroundColor: backgroundColor,
+      // Scaffold Theme - Saf beyaz arka plan
+      scaffoldBackgroundColor: Colors.white, // Saf beyaz (#FFFFFF)
       
       // AppBar Theme
       appBarTheme: AppBarTheme(

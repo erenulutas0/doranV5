@@ -96,7 +96,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Icon(
                         Icons.shopping_cart_outlined,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: Theme.of(context).colorScheme.primary, // Ana renk kullanıldı
+                        size: 26, // Biraz daha büyük
                       ),
                       Consumer<CartProvider>(
                         builder: (context, cartProvider, child) {
@@ -136,7 +137,8 @@ class _HomePageState extends State<HomePage> {
                 IconButton(
                   icon: Icon(
                     Icons.notifications_outlined,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.primary, // Ana renk kullanıldı
+                    size: 26, // Biraz daha büyük
                   ),
                   onPressed: () {
                     // Bildirimler sayfası
@@ -162,66 +164,68 @@ class _HomePageState extends State<HomePage> {
               child: BannerCarousel(),
             ),
 
-            // Filter Button
+            // Filter Button - Daha küçük ve sağa yaslı
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width < 600 ? 12 : 16,
-                  vertical: 12,
+                padding: EdgeInsets.only(
+                  left: MediaQuery.of(context).size.width < 600 ? 12 : 16,
+                  right: MediaQuery.of(context).size.width < 600 ? 12 : 16,
+                  top: 4, // Üst boşluk azaltıldı
+                  bottom: 4, // Alt boşluk azaltıldı
                 ),
-                child: Consumer<ProductProvider>(
-                  builder: (context, productProvider, child) {
-                    final hasActiveFilters = productProvider.selectedCategory != null &&
-                            productProvider.selectedCategory != 'All' ||
-                        productProvider.minRating != null ||
-                        (productProvider.sortBy != null &&
-                            productProvider.sortBy != 'Default');
+                child: Align(
+                  alignment: Alignment.centerRight, // Sağa yaslı
+                  child: Consumer<ProductProvider>(
+                    builder: (context, productProvider, child) {
+                      final hasActiveFilters = productProvider.selectedCategory != null &&
+                              productProvider.selectedCategory != 'All' ||
+                          productProvider.minRating != null ||
+                          (productProvider.sortBy != null &&
+                              productProvider.sortBy != 'Default');
 
-                    return OutlinedButton.icon(
-                      onPressed: () => _showFilterDialog(context, productProvider),
-                      icon: Stack(
-                        children: [
-                          Icon(
-                            Icons.tune,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          if (hasActiveFilters)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.error,
-                                  shape: BoxShape.circle,
+                      return IconButton(
+                        onPressed: () => _showFilterDialog(context, productProvider),
+                        icon: Stack(
+                          children: [
+                            Icon(
+                              Icons.tune,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
+                            if (hasActiveFilters)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.error,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Theme.of(context).scaffoldBackgroundColor,
+                                      width: 1.5,
+                                    ),
+                                  ),
                                 ),
                               ),
+                          ],
+                        ),
+                        style: IconButton.styleFrom(
+                          padding: const EdgeInsets.all(8),
+                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              width: 1,
                             ),
-                        ],
-                      ),
-                      label: Text(
-                        hasActiveFilters ? 'Filters Applied' : 'Filter',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 1.5,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    );
-                  },
+                        tooltip: hasActiveFilters ? 'Filters Applied' : 'Filter',
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -321,8 +325,8 @@ class _HomePageState extends State<HomePage> {
     return Drawer(
       child: Column(
         children: [
-          // Drawer Header
-          UserAccountsDrawerHeader(
+          // Drawer Header - Kişiselleştirilmiş karşılama
+          Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -333,39 +337,82 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            accountName: Text(
-              authProvider.userName ?? 'User',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            accountEmail: Text(
-              authProvider.userEmail ?? '',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white,
-              radius: 30,
-              child: Text(
-                authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+            padding: const EdgeInsets.fromLTRB(16, 60, 16, 20),
+            child: Row(
+              children: [
+                // Profil Resmi - Daha belirgin
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  radius: 35, // Daha büyük
+                  child: Text(
+                    authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
+                    style: TextStyle(
+                      fontSize: 28, // Daha büyük
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                // Kullanıcı Bilgisi
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Merhaba,',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        authProvider.userName ?? 'Kullanıcı',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (authProvider.userEmail != null && authProvider.userEmail!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          authProvider.userEmail!,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Menu Items
+          // Menu Items - Mantıksal gruplama
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
+                // Ana Navigasyon Grubu
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                    'NAVIGATION',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
                 _buildDrawerItem(
                   context,
                   icon: Icons.home_outlined,
@@ -394,7 +441,20 @@ class _HomePageState extends State<HomePage> {
                     context.push('/cart');
                   },
                 ),
-                const Divider(),
+                const Divider(height: 1),
+                
+                // Hesap Yönetimi Grubu
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'ACCOUNT',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
                 _buildDrawerItem(
                   context,
                   icon: Icons.person_outline,
@@ -422,7 +482,6 @@ class _HomePageState extends State<HomePage> {
                     context.push('/profile/addresses');
                   },
                 ),
-                const Divider(),
                 _buildDrawerItem(
                   context,
                   icon: Icons.settings_outlined,
@@ -431,6 +490,20 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pop(context);
                     context.push('/profile/settings');
                   },
+                ),
+                const Divider(height: 1),
+                
+                // Destek/Diğer Grubu
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'SUPPORT',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
                 _buildDrawerItem(
                   context,
@@ -441,7 +514,6 @@ class _HomePageState extends State<HomePage> {
                     context.push('/profile/help');
                   },
                 ),
-                const Divider(),
                 _buildDrawerItem(
                   context,
                   icon: Icons.info_outline,
@@ -464,23 +536,43 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Logout Button
+          // Logout Button - Daha belirgin, full-width, kırmızı
           Container(
             padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                authProvider.logout();
-                context.go('/login');
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: SizedBox(
+              width: double.infinity, // Full-width
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  authProvider.logout();
+                  context.go('/login');
+                },
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC3545), // Kırmızı - dikkat çekici
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
