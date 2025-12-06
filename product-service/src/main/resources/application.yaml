@@ -36,6 +36,10 @@ spring:
   jackson:
     default-property-inclusion: always  # Null değerleri de serialize et
     property-naming-strategy: LOWER_CAMEL_CASE
+    serialization:
+      write-dates-as-timestamps: false  # LocalDateTime'ı ISO-8601 formatında serialize et
+    deserialization:
+      fail-on-unknown-properties: false
 
 # Eureka yapılandırması
 eureka:

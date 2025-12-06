@@ -1,58 +1,57 @@
 import 'package:flutter/material.dart';
 
 class SearchBarWidget extends StatelessWidget {
-  final TextEditingController controller;
+  final VoidCallback? onTap;
 
   const SearchBarWidget({
     super.key,
-    required this.controller,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    
     return Container(
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(isMobile ? 10 : 12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: TextField(
-        controller: controller,
-        style: TextStyle(
-          fontSize: isMobile ? 13 : 14,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search products...',
-          hintStyle: TextStyle(
-            fontSize: isMobile ? 13 : 14,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), // Daha koyu renk - daha iyi kontrast
-            size: isMobile ? 22 : 26, // Biraz daha büyük
-          ),
-          suffixIcon: controller.text.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    Icons.clear,
-                    size: isMobile ? 18 : 20,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search,
+                  color: Colors.grey[600],
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Search Shop, Categories, Products',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
                   ),
-                  onPressed: () => controller.clear(),
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 12 : 16,
-            vertical: isMobile ? 10 : 12,
+                ),
+              ],
+            ),
           ),
         ),
-        onChanged: (value) {
-          // Search functionality
-        },
       ),
     );
   }
 }
-

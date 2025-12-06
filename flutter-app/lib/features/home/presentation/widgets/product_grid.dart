@@ -364,44 +364,49 @@ class _ProductCardState extends State<_ProductCard>
                 ),
                 
                 // Rating ve Review Count - Fiyatın hemen altında, maksimum kompakt
-                SizedBox(height: widget.isSmallPhone ? 3 : widget.isMobile ? 4 : 5),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: widget.isSmallPhone ? 14 : widget.isMobile ? 15 : 16,
-                      color: Colors.amber[700],
-                    ),
-                    SizedBox(width: 3),
-                    Text(
-                      (widget.product.rating ?? 0.0).toStringAsFixed(1),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: widget.isSmallPhone ? 11 : widget.isMobile ? 12 : 13,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                        height: 1.0,
-                        letterSpacing: -0.2,
+                // Sadece rating > 0 ise göster
+                if ((widget.product.rating ?? 0.0) > 0 || (widget.product.reviewCount ?? 0) > 0) ...[
+                  SizedBox(height: widget.isSmallPhone ? 3 : widget.isMobile ? 4 : 5),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: widget.isSmallPhone ? 14 : widget.isMobile ? 15 : 16,
+                        color: Colors.amber[700],
                       ),
-                    ),
-                    SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '(${widget.product.reviewCount ?? 0} reviews)',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: widget.isSmallPhone ? 10 : widget.isMobile ? 11 : 12,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
-                          fontWeight: FontWeight.w400,
+                      SizedBox(width: 3),
+                      Text(
+                        (widget.product.rating ?? 0.0).toStringAsFixed(1),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: widget.isSmallPhone ? 11 : widget.isMobile ? 12 : 13,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
                           height: 1.0,
-                          letterSpacing: -0.1,
+                          letterSpacing: -0.2,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
                       ),
-                    ),
-                  ],
-                ),
+                      if ((widget.product.reviewCount ?? 0) > 0) ...[
+                        SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '(${widget.product.reviewCount} reviews)',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: widget.isSmallPhone ? 10 : widget.isMobile ? 11 : 12,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                              fontWeight: FontWeight.w400,
+                              height: 1.0,
+                              letterSpacing: -0.1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

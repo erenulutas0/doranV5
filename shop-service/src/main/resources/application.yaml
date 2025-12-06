@@ -1,0 +1,59 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: shop-service
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/shop_db
+    username: postgres
+    password: postgres
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    url: jdbc:postgresql://postgres:5432/shop_db
+    user: postgres
+    password: postgres
+    locations: classpath:db/migration
+  
+  cloud:
+    config:
+      uri: http://config-server:8888
+      import-check:
+        enabled: false
+  config:
+    import: optional:configserver:http://config-server:8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-registry:8761/eureka/
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,mappings,beans
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.microservices.shop: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
+    org.hibernate: INFO
+

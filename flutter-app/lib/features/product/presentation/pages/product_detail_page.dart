@@ -174,14 +174,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  product.rating != null ? '${product.rating!.toStringAsFixed(1)}' : '0.0',
+                                  _ratingSummary != null 
+                                      ? '${_ratingSummary!.averageRating.toStringAsFixed(1)}' 
+                                      : (product.rating != null ? '${product.rating!.toStringAsFixed(1)}' : '0.0'),
                                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 RatingBarIndicator(
-                                  rating: product.rating ?? 0.0,
+                                  rating: _ratingSummary != null 
+                                      ? _ratingSummary!.averageRating 
+                                      : (product.rating ?? 0.0),
                                   itemBuilder: (context, index) => const Icon(
                                     Icons.star,
                                     color: Colors.amber,
@@ -191,7 +195,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${product.reviewCount ?? 0} Değerlendirme',
+                                  _ratingSummary != null 
+                                      ? '${_ratingSummary!.totalReviews} Değerlendirme'
+                                      : '${product.reviewCount ?? 0} Değerlendirme',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                   ),

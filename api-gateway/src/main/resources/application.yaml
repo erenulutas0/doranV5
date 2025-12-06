@@ -161,6 +161,120 @@ spring:
               args:
                 name: reviewServiceCircuitBreaker
                 fallbackUri: forward:/fallback/review
+        
+        # Media Service route
+        - id: media-service
+          uri: lb://media-service
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /media/** kalır
+            # Rate Limiting (Media Service için özel limit - dosya upload yoğun)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10  # Media service için düşük limit (upload yoğun)
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: mediaServiceCircuitBreaker
+                fallbackUri: forward:/fallback/media
+        
+        # Own Product Service route
+        - id: own-product-service
+          uri: lb://own-product-service
+          predicates:
+            - Path=/api/user-products/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /user-products/** kalır
+            # Rate Limiting (Own Product Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Own Product service için yüksek limit (okuma yoğun)
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: ownProductServiceCircuitBreaker
+                fallbackUri: forward:/fallback/own-product
+        
+        # Shop Service route
+        - id: shop-service
+          uri: lb://shop-service
+          predicates:
+            - Path=/api/shops/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /shops/** kalır
+            # Rate Limiting (Shop Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Shop service için yüksek limit (okuma yoğun)
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: shopServiceCircuitBreaker
+                fallbackUri: forward:/fallback/shop
+        
+        # Jobs Service route
+        - id: jobs-service
+          uri: lb://jobs-service
+          predicates:
+            - Path=/api/jobs/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /jobs/** kalır
+            # Rate Limiting (Jobs Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Jobs service için yüksek limit (okuma yoğun)
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: jobsServiceCircuitBreaker
+                fallbackUri: forward:/fallback/jobs
+        
+        # Hobby Group Service route
+        - id: hobby-group-service
+          uri: lb://hobby-group-service
+          predicates:
+            - Path=/api/hobby-groups/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır, /hobby-groups/** kalır
+            # Rate Limiting (Hobby Group Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Hobby Group service için yüksek limit (okuma yoğun)
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: hobbyGroupServiceCircuitBreaker
+                fallbackUri: forward:/fallback/hobby-group
+        
+        # Entertainment Service route
+        - id: entertainment-service
+          uri: lb://entertainment-service
+          predicates:
+            - Path=/api/venues/**,/api/events/**
+          filters:
+            - StripPrefix=1  # /api kısmını çıkarır
+            # Rate Limiting (Entertainment Service için özel limit)
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30  # Entertainment service için yüksek limit (okuma yoğun)
+                redis-rate-limiter.burstCapacity: 60
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: entertainmentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/entertainment
 
 # Eureka yapılandırması
 eureka:

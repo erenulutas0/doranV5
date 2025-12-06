@@ -1,0 +1,47 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: own-product-service
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/own_product_db
+    username: postgres
+    password: postgres
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    url: jdbc:postgresql://postgres:5432/own_product_db
+    user: postgres
+    password: postgres
+    locations: classpath:db/migration
+  
+  cloud:
+    config:
+      uri: http://config-server:8888
+      import-check:
+        enabled: false
+  config:
+    import: optional:configserver:http://config-server:8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-registry:8761/eureka/
+  instance:
+    hostname: localhost
+
+logging:
+  level:
+    com.microservices.ownproduct: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+

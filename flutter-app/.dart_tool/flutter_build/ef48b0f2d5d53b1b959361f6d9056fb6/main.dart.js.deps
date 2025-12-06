@@ -759,9 +759,12 @@ file:///C:/Users/pc/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1/lib/web.dar
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/.dart_tool/flutter_build/ef48b0f2d5d53b1b959361f6d9056fb6/app.dill
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/.dart_tool/flutter_build/ef48b0f2d5d53b1b959361f6d9056fb6/main.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/.dart_tool/flutter_build/ef48b0f2d5d53b1b959361f6d9056fb6/web_plugin_registrant.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/data/mock_data.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/models/banner_model.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/models/product_model.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/models/rating_summary_model.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/models/review_model.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/models/shop_model.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/providers/auth_provider.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/providers/cart_provider.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/core/providers/product_provider.dart
@@ -774,9 +777,10 @@ file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/l
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/auth/presentation/pages/register_page.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/cart/presentation/pages/cart_page.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/pages/home_page.dart
-file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/banner_carousel.dart
-file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/filter_dialog.dart
-file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/home_app_bar.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/action_buttons.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/banner_slider.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/location_header.dart
+file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/nearby_shops_section.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/product_grid.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/home/presentation/widgets/search_bar_widget.dart
 file:///C:/Users/pc/OneDrive/Masa%C3%BCst%C3%BC/java-microservices/flutter-app/lib/features/intro/presentation/pages/intro_page.dart

@@ -41,8 +41,8 @@ class Review {
           : json['helpfulCount'] != null 
               ? int.tryParse(json['helpfulCount'].toString()) ?? 0
               : 0,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
     );
   }
 
@@ -59,6 +59,26 @@ class Review {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
+  }
+
+  static DateTime _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) {
+      return DateTime.now();
+    }
+    try {
+      if (dateTime is String) {
+        // ISO 8601 formatını parse et
+        return DateTime.parse(dateTime);
+      } else if (dateTime is int) {
+        // Unix timestamp
+        return DateTime.fromMillisecondsSinceEpoch(dateTime);
+      } else {
+        return DateTime.now();
+      }
+    } catch (e) {
+      // Parse hatası durumunda şu anki zamanı döndür
+      return DateTime.now();
+    }
   }
 }
 

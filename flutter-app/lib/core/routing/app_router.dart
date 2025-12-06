@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
@@ -15,6 +14,11 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/intro/presentation/pages/intro_page.dart';
+import '../../features/shops/presentation/pages/shops_page.dart';
+import '../../features/jobs/presentation/pages/jobs_page.dart';
+import '../../features/own-products/presentation/pages/own_products_page.dart';
+import '../../features/entertainment/presentation/pages/entertainment_page.dart';
+import '../../features/hobby-groups/presentation/pages/hobby_groups_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -78,6 +82,26 @@ class AppRouter {
       GoRoute(
         path: '/profile/help',
         builder: (context, state) => const HelpSupportPage(),
+      ),
+      GoRoute(
+        path: '/shops',
+        builder: (context, state) => const ShopsPage(),
+      ),
+      GoRoute(
+        path: '/jobs',
+        builder: (context, state) => const JobsPage(),
+      ),
+      GoRoute(
+        path: '/own-products',
+        builder: (context, state) => const OwnProductsPage(),
+      ),
+      GoRoute(
+        path: '/entertainment',
+        builder: (context, state) => const EntertainmentPage(),
+      ),
+      GoRoute(
+        path: '/hobby-groups',
+        builder: (context, state) => const HobbyGroupsPage(),
       ),
     ],
   );

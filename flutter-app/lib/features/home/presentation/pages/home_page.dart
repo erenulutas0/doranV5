@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/product_provider.dart';
 import '../../../../core/providers/cart_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
-import '../widgets/home_app_bar.dart';
-import '../widgets/filter_dialog.dart';
-import '../widgets/product_grid.dart';
+import '../../../../core/data/mock_data.dart';
+import '../widgets/location_header.dart';
 import '../widgets/search_bar_widget.dart';
-import '../widgets/banner_carousel.dart';
+import '../widgets/action_buttons.dart';
+import '../widgets/banner_slider.dart';
+import '../widgets/nearby_shops_section.dart';
+import '../widgets/product_grid.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,7 +22,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -36,29 +37,9 @@ class _HomePageState extends State<HomePage> {
     productProvider.fetchProducts();
   }
 
-  void _showFilterDialog(BuildContext context, ProductProvider productProvider) {
-    showDialog(
-      context: context,
-      builder: (context) => FilterDialog(
-        selectedCategory: productProvider.selectedCategory,
-        minRating: productProvider.minRating,
-        sortBy: productProvider.sortBy,
-      ),
-    ).then((result) {
-      if (result != null) {
-        productProvider.applyFilters(
-          category: result['category'] as String?,
-          minRating: result['minRating'] as double?,
-          sortBy: result['sortBy'] as String?,
-        );
-      }
-    });
-  }
-
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -67,255 +48,179 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _buildDrawer(context),
-      body: SafeArea(
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            // App Bar
-            SliverAppBar(
-              floating: true,
-              pinned: true,
-              elevation: 0,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              leading: Builder(
-                builder: (context) => IconButton(
-                  icon: Icon(
-                    Icons.menu,
-                    color: Theme.of(context).colorScheme.onSurface,
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // Location Header
+          SliverToBoxAdapter(
+            child: LocationHeader(
+              location: 'Nadakkavu',
+              address: 'Nadakkavu, Kozhikode, 673006, Kerala',
+              onLocationTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Location selection coming soon!'),
                   ),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                ),
-              ),
-              title: Text(
-                'Shop',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              iconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              actions: [
-                IconButton(
-                  icon: Stack(
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        color: Theme.of(context).colorScheme.primary, // Ana renk kullanıldı
-                        size: 26, // Biraz daha büyük
-                      ),
-                      Consumer<CartProvider>(
-                        builder: (context, cartProvider, child) {
-                          if (cartProvider.itemCount > 0) {
-                            return Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: Text(
-                                  '${cartProvider.itemCount}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ],
-                  ),
-                  onPressed: () => context.push('/cart'),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.notifications_outlined,
-                    color: Theme.of(context).colorScheme.primary, // Ana renk kullanıldı
-                    size: 26, // Biraz daha büyük
-                  ),
-                  onPressed: () {
-                    // Bildirimler sayfası
-                  },
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
-
-            // Search Bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width < 600 ? 12 : 16,
-                  vertical: MediaQuery.of(context).size.width < 600 ? 10 : 12,
-                ),
-                child: SearchBarWidget(controller: _searchController),
-              ),
-            ),
-
-            // Banner Carousel
-            SliverToBoxAdapter(
-              child: BannerCarousel(),
-            ),
-
-            // Filter Button - Daha küçük ve sağa yaslı
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width < 600 ? 12 : 16,
-                  right: MediaQuery.of(context).size.width < 600 ? 12 : 16,
-                  top: 4, // Üst boşluk azaltıldı
-                  bottom: 4, // Alt boşluk azaltıldı
-                ),
-                child: Align(
-                  alignment: Alignment.centerRight, // Sağa yaslı
-                  child: Consumer<ProductProvider>(
-                    builder: (context, productProvider, child) {
-                      final hasActiveFilters = productProvider.selectedCategory != null &&
-                              productProvider.selectedCategory != 'All' ||
-                          productProvider.minRating != null ||
-                          (productProvider.sortBy != null &&
-                              productProvider.sortBy != 'Default');
-
-                      return IconButton(
-                        onPressed: () => _showFilterDialog(context, productProvider),
-                        icon: Stack(
-                          children: [
-                            Icon(
-                              Icons.tune,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            ),
-                            if (hasActiveFilters)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.error,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Theme.of(context).scaffoldBackgroundColor,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        style: IconButton.styleFrom(
-                          padding: const EdgeInsets.all(8),
-                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        tooltip: hasActiveFilters ? 'Filters Applied' : 'Filter',
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-
-            // Products Grid
-            Consumer<ProductProvider>(
-              builder: (context, productProvider, child) {
-                if (productProvider.isLoading) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  );
-                }
-
-                if (productProvider.error != null) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            productProvider.error!,
-                            style: Theme.of(context).textTheme.bodyLarge,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadProducts,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final products = productProvider.filteredProducts.isEmpty &&
-                        productProvider.selectedCategory == null &&
-                        productProvider.minRating == null &&
-                        (productProvider.sortBy == null ||
-                            productProvider.sortBy == 'Default')
-                    ? productProvider.products
-                    : productProvider.filteredProducts;
-
-                if (products.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No products found',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return ProductGrid(products: products);
+                );
               },
             ),
+          ),
 
-            // Bottom Padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 80),
+          // Search Bar
+          SliverToBoxAdapter(
+            child: SearchBarWidget(
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Search functionality coming soon!'),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+
+          // Action Buttons (Shop, Jobs, Own Product)
+          const SliverToBoxAdapter(
+            child: ActionButtons(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+
+          // Banner Slider
+          SliverToBoxAdapter(
+            child: BannerSlider(
+              banners: MockData.banners,
+            ),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+
+          // Nearby Shops Section
+          SliverToBoxAdapter(
+            child: NearbyShopsSection(
+              shops: MockData.nearbyShops,
+            ),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 24),
+          ),
+
+          // Featured Products Section Header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Featured Products',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to all products
+                    },
+                    child: const Text('See All'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 8),
+          ),
+
+          // Products Grid
+          Consumer<ProductProvider>(
+            builder: (context, productProvider, child) {
+              if (productProvider.isLoading) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                );
+              }
+
+              if (productProvider.error != null) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          productProvider.error!,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadProducts,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final products = productProvider.products;
+
+              if (products.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No products found',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              // Show only first 6 products for featured section
+              final featuredProducts = products.take(6).toList();
+
+              return ProductGrid(products: featuredProducts);
+            },
+          ),
+
+          // Bottom Padding
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 80),
+          ),
+        ],
       ),
       bottomNavigationBar: _buildBottomNavBar(context),
     );
@@ -323,12 +228,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawer(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Drawer(
       child: Column(
         children: [
-          // Drawer Header - Kişiselleştirilmiş karşılama
+          // Drawer Header
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -343,27 +247,25 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.fromLTRB(16, 60, 16, 20),
             child: Row(
               children: [
-                // Profil Resmi - Daha belirgin
                 CircleAvatar(
                   backgroundColor: Colors.white,
-                  radius: 35, // Daha büyük
+                  radius: 35,
                   child: Text(
                     authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
                     style: TextStyle(
-                      fontSize: 28, // Daha büyük
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Kullanıcı Bilgisi
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Merhaba,',
+                        'Hello,',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withOpacity(0.9),
@@ -371,7 +273,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        authProvider.userName ?? 'Kullanıcı',
+                        authProvider.userName ?? 'User',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -399,12 +301,11 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Menu Items - Mantıksal gruplama
+          // Menu Items
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Ana Navigasyon Grubu
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
@@ -446,7 +347,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const Divider(height: 1),
                 
-                // Hesap Yönetimi Grubu
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
@@ -469,24 +369,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildDrawerItem(
                   context,
-                  icon: Icons.edit_outlined,
-                  title: 'Edit Profile',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/profile/edit');
-                  },
-                ),
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.location_on_outlined,
-                  title: 'Addresses',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/profile/addresses');
-                  },
-                ),
-                _buildDrawerItem(
-                  context,
                   icon: Icons.settings_outlined,
                   title: 'Settings',
                   onTap: () {
@@ -496,7 +378,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const Divider(height: 1),
                 
-                // Destek/Diğer Grubu
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
@@ -539,7 +420,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Logout Button - Daha belirgin, full-width, kırmızı
+          // Logout Button
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -552,7 +433,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             child: SizedBox(
-              width: double.infinity, // Full-width
+              width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
@@ -569,7 +450,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC3545), // Kırmızı - dikkat çekici
+                  backgroundColor: const Color(0xFFDC3545),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 2,
@@ -663,4 +544,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

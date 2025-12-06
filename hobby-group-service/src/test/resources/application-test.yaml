@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: hobby-group-service
+  
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+  
+  config:
+    import: optional:configserver:http://localhost:8888
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  
+  flyway:
+    enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    com.microservices.hobbygroup: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+

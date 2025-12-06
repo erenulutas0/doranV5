@@ -1,0 +1,47 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: jobs-service
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/jobs_db
+    username: postgres
+    password: postgres
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    url: jdbc:postgresql://postgres:5432/jobs_db
+    user: postgres
+    password: postgres
+    locations: classpath:db/migration
+  
+  cloud:
+    config:
+      uri: http://config-server:8888
+      import-check:
+        enabled: false
+  config:
+    import: optional:configserver:http://config-server:8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-registry:8761/eureka/
+  instance:
+    hostname: localhost
+
+logging:
+  level:
+    com.microservices.jobs: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+

@@ -3,6 +3,8 @@ package com.microservices.user.Service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,16 +21,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Cacheable(value = "users", key = "'all'")
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
+    @Cacheable(value = "users", key = "#id.toString()")
     public User getUserById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "'all'")  // Tüm kullanıcılar listesi cache'ini temizle
     public User createUser(User user) {
         // Email unique kontrolü
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -40,10 +45,13 @@ public class UserService {
             throw new DuplicateResourceException("User", "username", user.getUsername());
         }
         
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        // Yeni kullanıcıyı cache'e ekle
+        return savedUser;
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "#id.toString()")  // Bu kullanıcının cache'ini temizle
     public User updateUser(UUID id, User userDetails) {
         User user = getUserById(id);
         
@@ -73,9 +81,12 @@ public class UserService {
         user.setState(userDetails.getState());
         user.setZip(userDetails.getZip());
         
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        // Cache'i temizledik, bir sonraki getUserById çağrısında cache'e yazılacak
+        return updatedUser;
     }
 
+    @CacheEvict(value = "users", key = "#id.toString()")  // Bu kullanıcının cache'ini temizle
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User", "id", id);

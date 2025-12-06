@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
@@ -160,18 +161,21 @@ public class Product {
      * - Review-service'den ne zaman güncellendiğini takip eder
      */
     @Setter
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime lastRatingSync;
     
     /**
      * Oluşturulma Tarihi
      * - Otomatik oluşturulur (@PrePersist)
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
     
     /**
      * Güncellenme Tarihi
      * - Her güncellemede otomatik güncellenir (@PreUpdate)
      */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 }
 

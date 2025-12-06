@@ -376,6 +376,188 @@ services:
       timeout: 10s
       retries: 5
 
+  # Media Service
+  media-service:
+    build:
+      context: ./media-service
+      dockerfile: Dockerfile
+    container_name: media-service
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/media_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 10MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 10MB
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8090/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Own Product Service
+  own-product-service:
+    build:
+      context: ./own-product-service
+      dockerfile: Dockerfile
+    container_name: own-product-service
+    ports:
+      - "8091:8091"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/own_product_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8091/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Shop Service
+  shop-service:
+    build:
+      context: ./shop-service
+      dockerfile: Dockerfile
+    container_name: shop-service
+    ports:
+      - "8092:8092"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shop_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8092/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Jobs Service
+  jobs-service:
+    build:
+      context: ./jobs-service
+      dockerfile: Dockerfile
+    container_name: jobs-service
+    ports:
+      - "8093:8093"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/jobs_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8093/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Hobby Group Service
+  hobby-group-service:
+    build:
+      context: ./hobby-group-service
+      dockerfile: Dockerfile
+    container_name: hobby-group-service
+    ports:
+      - "8096:8096"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hobby_group_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8096/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Entertainment Service
+  entertainment-service:
+    build:
+      context: ./entertainment-service
+      dockerfile: Dockerfile
+    container_name: entertainment-service
+    ports:
+      - "8095:8095"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/entertainment_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - microservices-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8095/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # API Gateway
   api-gateway:
     build:

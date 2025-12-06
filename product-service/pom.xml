@@ -148,6 +148,13 @@
             <artifactId>logstash-logback-encoder</artifactId>
             <version>7.4</version>
         </dependency>
+
+        <!-- Jackson JSR310 Support -->
+        <!-- LocalDateTime, LocalDate gibi Java 8 time API'lerini serialize etmek için -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

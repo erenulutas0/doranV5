@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.microservices.product.Model.Product;
-import com.microservices.product.Service.ProductService;
+import com.microservices.product.service.ProductService;
 
 /**
  * Product Controller

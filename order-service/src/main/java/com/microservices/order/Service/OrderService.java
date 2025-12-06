@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,8 @@ import com.microservices.order.Client.InventoryServiceClient;
 import com.microservices.order.Client.ProductServiceClient;
 import com.microservices.order.Client.UserServiceClient;
 import com.microservices.order.Config.RabbitMQConfig;
+import com.microservices.order.Controller.OrderWebSocketController;
+import com.microservices.order.DTO.OrderStatusUpdate;
 import com.microservices.order.Event.OrderCreatedEvent;
 import com.microservices.order.Event.OrderStatusChangedEvent;
 import com.microservices.order.Exception.ResourceNotFoundException;
@@ -44,24 +48,28 @@ public class OrderService {
     private final InventoryServiceClient inventoryServiceClient;
     private final UserServiceClient userServiceClient;
     private final RabbitTemplate rabbitTemplate;
+    private final OrderWebSocketController webSocketController;
 
     public OrderService(
             OrderRepository orderRepository,
             ProductServiceClient productServiceClient,
             InventoryServiceClient inventoryServiceClient,
             UserServiceClient userServiceClient,
-            RabbitTemplate rabbitTemplate) {
+            RabbitTemplate rabbitTemplate,
+            OrderWebSocketController webSocketController) {
         this.orderRepository = orderRepository;
         this.productServiceClient = productServiceClient;
         this.inventoryServiceClient = inventoryServiceClient;
         this.userServiceClient = userServiceClient;
         this.rabbitTemplate = rabbitTemplate;
+        this.webSocketController = webSocketController;
     }
 
     /**
      * Tüm siparişleri getir
      * Admin paneli için kullanılır
      */
+    @Cacheable(value = "orders", key = "'all'")
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -69,6 +77,7 @@ public class OrderService {
     /**
      * ID'ye göre sipariş getir
      */
+    @Cacheable(value = "orders", key = "#orderId.toString()")
     public Order getOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
@@ -78,6 +87,7 @@ public class OrderService {
      * User ID'ye göre siparişleri getir
      * Kullanıcının tüm siparişlerini listeler
      */
+    @Cacheable(value = "orders", key = "'user:' + #userId.toString()")
     public List<Order> getOrdersByUserId(UUID userId) {
         return orderRepository.findByUserId(userId);
     }
@@ -112,6 +122,7 @@ public class OrderService {
      * 5. Siparişi kaydet
      */
     @Transactional
+    @CacheEvict(value = "orders", key = "'user:' + #order.userId.toString()")  // Kullanıcının sipariş listesi cache'ini temizle
     public Order createOrder(Order order) {
         // 1. Kullanıcı doğrulama
         UserServiceClient.UserResponse user;
@@ -291,6 +302,7 @@ public class OrderService {
      * - Herhangi bir durum → CANCELLED (iptal edildi)
      */
     @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")  // Bu siparişin cache'ini temizle
     public Order updateOrderStatus(UUID orderId, OrderStatus newStatus) {
         Order order = getOrderById(orderId);
         
@@ -330,6 +342,25 @@ public class OrderService {
         } catch (Exception e) {
             // RabbitMQ hatası durum güncellemeyi engellemez
             System.err.println("Error sending OrderStatusChangedEvent: " + e.getMessage());
+        }
+        
+        // WebSocket'e real-time update gönder
+        try {
+            OrderStatusUpdate statusUpdate = new OrderStatusUpdate(
+                savedOrder.getId(),
+                oldStatus,
+                newStatus,
+                savedOrder.getUserId()
+            );
+            
+            // Belirli sipariş için update gönder
+            webSocketController.sendOrderStatusUpdate(savedOrder.getId(), statusUpdate);
+            
+            // Kullanıcının tüm siparişleri için update gönder
+            webSocketController.sendUserOrderUpdate(savedOrder.getUserId(), statusUpdate);
+        } catch (Exception e) {
+            // WebSocket hatası durum güncellemeyi engellemez
+            System.err.println("Error sending WebSocket update: " + e.getMessage());
         }
         
         return savedOrder;
@@ -377,6 +408,7 @@ public class OrderService {
      * Sipariş güncelle
      * Partial update yapıyor (null olmayan field'ları günceller)
      */
+    @CacheEvict(value = "orders", key = "#orderId.toString()")  // Bu siparişin cache'ini temizle
     public Order updateOrder(UUID orderId, Order orderDetails) {
         Order order = getOrderById(orderId);
         
@@ -473,6 +505,7 @@ public class OrderService {
     /**
      * Sipariş sil
      */
+    @CacheEvict(value = "orders", key = "#orderId.toString()")  // Bu siparişin cache'ini temizle
     public void deleteOrder(UUID orderId) {
         if (!orderRepository.existsById(orderId)) {
             throw new ResourceNotFoundException("Order", "id", orderId);

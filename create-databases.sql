@@ -71,6 +71,76 @@ CREATE DATABASE notification_db
 
 COMMENT ON DATABASE notification_db IS 'Notification Service için veritabanı - Bildirim yönetimi';
 
+-- Review Service Database
+CREATE DATABASE review_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE review_db IS 'Review Service için veritabanı - Ürün/Servis değerlendirme';
+
+-- Media Service Database
+CREATE DATABASE media_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE media_db IS 'Media Service için veritabanı - Dosya ve medya yönetimi';
+
+-- Own Product Service Database
+CREATE DATABASE own_product_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE own_product_db IS 'Own Product Service için veritabanı - Kullanıcı ürün paylaşımı';
+
+-- Shop Service Database
+CREATE DATABASE shop_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE shop_db IS 'Shop Service için veritabanı - Dükkan yönetimi';
+
+-- Jobs Service Database
+CREATE DATABASE jobs_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE jobs_db IS 'Jobs Service için veritabanı - İş ilanları yönetimi';
+
+-- Hobby Group Service Database
+CREATE DATABASE hobby_group_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE hobby_group_db IS 'Hobby Group Service için veritabanı - Hobi grupları yönetimi';
+
+-- Entertainment Service Database
+CREATE DATABASE entertainment_db
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE entertainment_db IS 'Entertainment Service için veritabanı - Eğlence mekanları ve etkinlikler';
+
 -- ============================================
 -- Veritabanları başarıyla oluşturuldu!
 -- ============================================
@@ -81,6 +151,8 @@ COMMENT ON DATABASE notification_db IS 'Notification Service için veritabanı -
 --   ✓ order_db
 --   ✓ inventory_db
 --   ✓ notification_db
+--   ✓ review_db
+--   ✓ media_db
 -- 
 -- Sonraki adımlar:
 --   1. Her servisin pom.xml'ine PostgreSQL dependency ekle
