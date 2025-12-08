@@ -43,16 +43,6 @@ public class ProductController {
     }
 
     /**
-     * ID'ye göre ürün getir
-     * GET /products/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable("id") UUID id) {
-        Product product = productService.getProductById(id);
-        return ResponseEntity.ok(product);
-    }
-
-    /**
      * Kategoriye göre ürünleri getir
      * GET /products/category?category=Electronics
      */
@@ -70,6 +60,29 @@ public class ProductController {
     public ResponseEntity<List<Product>> getActiveProducts() {
         List<Product> products = productService.getActiveProducts();
         return ResponseEntity.ok(products);
+    }
+
+    /**
+     * Featured ürünleri getir (en yüksek rating'e sahip aktif ürünler, maksimum 6)
+     * GET /products/featured
+     * NOT: Bu endpoint /products/{id} endpoint'inden ÖNCE tanımlanmalı
+     * çünkü Spring path variable'ları sırayla eşleştirir
+     */
+    @GetMapping("/featured")
+    public ResponseEntity<List<Product>> getFeaturedProducts() {
+        List<Product> products = productService.getFeaturedProducts();
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * ID'ye göre ürün getir
+     * GET /products/{id}
+     * NOT: Bu endpoint en sonda olmalı çünkü path variable tüm string'leri yakalar
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable("id") UUID id) {
+        Product product = productService.getProductById(id);
+        return ResponseEntity.ok(product);
     }
     
     /**
@@ -104,4 +117,3 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 }
-

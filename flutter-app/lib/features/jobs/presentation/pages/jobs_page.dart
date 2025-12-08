@@ -405,98 +405,185 @@ class _JobsPageState extends State<JobsPage> {
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          // Navigate to job detail
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: () {
+              // Navigate to job detail
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          job.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              job.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (job.companyName != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                job.companyName!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        if (job.companyName != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            job.companyName!,
+                      ),
+                      if (job.isRemote == true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Remote',
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Colors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (job.description != null && job.description!.isNotEmpty)
+                    Text(
+                      job.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildInfoChip(Icons.location_on, job.displayLocation),
+                      _buildInfoChip(Icons.work, job.displayJobType),
+                      if (job.salaryRange != null)
+                        _buildInfoChip(Icons.attach_money, job.salaryRange!),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      job.category,
+                      style: TextStyle(
+                        color: Colors.purple[700],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Map Location Button (Top Right)
+          if (job.latitude != null && job.longitude != null && job.isRemote != true)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _showLocationOnMap(job);
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
-                  ),
-                  if (job.isRemote == true)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Remote',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                    child: const Icon(
+                      Icons.map,
+                      size: 20,
+                      color: Color(0xFF8E24AA),
                     ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (job.description != null && job.description!.isNotEmpty)
-                Text(
-                  job.description!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildInfoChip(Icons.location_on, job.displayLocation),
-                  _buildInfoChip(Icons.work, job.displayJobType),
-                  if (job.salaryRange != null)
-                    _buildInfoChip(Icons.attach_money, job.salaryRange!),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  job.category,
-                  style: TextStyle(
-                    color: Colors.purple[700],
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showLocationOnMap(JobModel job) {
+    if (job.latitude == null || job.longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bu iş ilanının konum bilgisi bulunmuyor.'),
+          duration: Duration(seconds: 2),
         ),
+      );
+      return;
+    }
+
+    final marker = MapMarker(
+      position: LatLng(job.latitude!, job.longitude!),
+      title: job.title,
+      subtitle: job.companyName ?? job.category,
+      icon: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: const Icon(Icons.work, color: Colors.white, size: 24),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => LocationFilterDialog(
+        initialLatitude: job.latitude!,
+        initialLongitude: job.longitude!,
+        initialRadiusKm: 10.0,
+        onApply: (latitude, longitude, radiusKm) {
+          // Sadece gösterim için, filtreleme yapmıyoruz
+          Navigator.of(context).pop();
+        },
+        markers: [marker],
       ),
     );
   }

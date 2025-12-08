@@ -380,56 +380,58 @@ class _HobbyGroupsPageState extends State<HobbyGroupsPage> {
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          // Navigate to group detail
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Group Image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.grey[300],
-                child: group.imageUrl != null && group.imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: group.imageUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[300],
-                          child: const Center(child: CircularProgressIndicator()),
-                        ),
-                        errorWidget: (context, url, error) => CachedNetworkImage(
-                          imageUrl: _getCategoryImageUrl(group.category),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                            child: const Center(child: CircularProgressIndicator()),
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: () {
+              // Navigate to group detail
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Group Image
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: group.imageUrl != null && group.imageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: group.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (context, url, error) => CachedNetworkImage(
+                              imageUrl: _getCategoryImageUrl(group.category),
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: Colors.grey[300],
+                                child: const Center(child: CircularProgressIndicator()),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.group, size: 64, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: _getCategoryImageUrl(group.category),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.group, size: 64, color: Colors.grey),
+                            ),
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.group, size: 64, color: Colors.grey),
-                          ),
-                        ),
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: _getCategoryImageUrl(group.category),
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[300],
-                          child: const Center(child: CircularProgressIndicator()),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.group, size: 64, color: Colors.grey),
-                        ),
-                      ),
-              ),
-            ),
+                  ),
+                ),
 
             // Group Info
             Padding(
@@ -536,6 +538,91 @@ class _HobbyGroupsPageState extends State<HobbyGroupsPage> {
             ),
           ],
         ),
+      ),
+          // Map Location Button (Top Right)
+          if (group.latitude != null && group.longitude != null)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _showLocationOnMap(group);
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.map,
+                      size: 20,
+                      color: Color(0xFF8E24AA),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showLocationOnMap(HobbyGroupModel group) {
+    if (group.latitude == null || group.longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bu hobi grubunun konum bilgisi bulunmuyor.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final marker = MapMarker(
+      position: LatLng(group.latitude!, group.longitude!),
+      title: group.name,
+      subtitle: group.category,
+      icon: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.pink,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: const Icon(Icons.group, color: Colors.white, size: 24),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => LocationFilterDialog(
+        initialLatitude: group.latitude!,
+        initialLongitude: group.longitude!,
+        initialRadiusKm: 10.0,
+        onApply: (latitude, longitude, radiusKm) {
+          // Sadece gösterim için, filtreleme yapmıyoruz
+          Navigator.of(context).pop();
+        },
+        markers: [marker],
       ),
     );
   }

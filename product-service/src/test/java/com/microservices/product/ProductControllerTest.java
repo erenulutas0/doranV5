@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservices.product.Controller.ProductController;
 import com.microservices.product.Exception.ResourceNotFoundException;
 import com.microservices.product.Model.Product;
-import com.microservices.product.Service.ProductService;
+import com.microservices.product.service.ProductService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Import;
 import com.microservices.product.Exception.ResourceNotFoundException;
 import com.microservices.product.Model.Product;
 import com.microservices.product.Repository.ProductRepository;
-import com.microservices.product.Service.ProductService;
+import com.microservices.product.service.ProductService;
 
 /**
  * ProductService için Unit Test

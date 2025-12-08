@@ -177,6 +177,55 @@ class _EntertainmentPageState extends State<EntertainmentPage> {
     );
   }
 
+  void _showLocationOnMap(VenueModel venue) {
+    if (venue.latitude == null || venue.longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bu mekanın konum bilgisi bulunmuyor.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final marker = MapMarker(
+      position: LatLng(venue.latitude!, venue.longitude!),
+      title: venue.name,
+      subtitle: venue.displayType,
+      icon: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.orange,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: const Icon(Icons.location_city, color: Colors.white, size: 24),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => LocationFilterDialog(
+        initialLatitude: venue.latitude!,
+        initialLongitude: venue.longitude!,
+        initialRadiusKm: 10.0,
+        onApply: (latitude, longitude, radiusKm) {
+          // Sadece gösterim için, filtreleme yapmıyoruz
+          Navigator.of(context).pop();
+        },
+        markers: [marker],
+      ),
+    );
+  }
+
   void _openLocationFilter() async {
     // Eğer veriler yükleniyorsa veya boşsa, önce yükle
     if (_isLoading || _venues.isEmpty) {
@@ -383,7 +432,10 @@ class _EntertainmentPageState extends State<EntertainmentPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               itemCount: _venues.length,
                               itemBuilder: (context, index) {
-                                return _VenueCard(venue: _venues[index]);
+                                return _VenueCard(
+                                  venue: _venues[index],
+                                  onMapTap: () => _showLocationOnMap(_venues[index]),
+                                );
                               },
                             ),
                           ),
@@ -396,8 +448,9 @@ class _EntertainmentPageState extends State<EntertainmentPage> {
 
 class _VenueCard extends StatelessWidget {
   final VenueModel venue;
+  final VoidCallback? onMapTap;
 
-  const _VenueCard({required this.venue});
+  const _VenueCard({required this.venue, this.onMapTap});
 
   @override
   Widget build(BuildContext context) {
@@ -453,6 +506,38 @@ class _VenueCard extends StatelessWidget {
                         ),
                 ),
               ),
+              // Map Location Button (Top Left)
+              if (venue.latitude != null && venue.longitude != null)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onMapTap,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.map,
+                          size: 20,
+                          color: Color(0xFF8E24AA),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               // Favorite Icon (Top Right)
               Positioned(
                 top: 12,

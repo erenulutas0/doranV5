@@ -156,6 +156,55 @@ class _ShopsPageState extends State<ShopsPage> {
     );
   }
 
+  void _showLocationOnMap(ShopModel shop) {
+    if (shop.latitude == null || shop.longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bu mekanın konum bilgisi bulunmuyor.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final marker = MapMarker(
+      position: LatLng(shop.latitude!, shop.longitude!),
+      title: shop.name,
+      subtitle: shop.category,
+      icon: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: const Icon(Icons.store, color: Colors.white, size: 24),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => LocationFilterDialog(
+        initialLatitude: shop.latitude!,
+        initialLongitude: shop.longitude!,
+        initialRadiusKm: 10.0,
+        onApply: (latitude, longitude, radiusKm) {
+          // Sadece gösterim için, filtreleme yapmıyoruz
+          Navigator.of(context).pop();
+        },
+        markers: [marker],
+      ),
+    );
+  }
+
   void _openLocationFilter() async {
     debugPrint('🗺️ Opening location filter dialog...');
     debugPrint('📊 Current shops count: ${_shops.length}');
@@ -371,7 +420,10 @@ class _ShopsPageState extends State<ShopsPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               itemCount: _shops.length,
                               itemBuilder: (context, index) {
-                                return _ShopCard(shop: _shops[index]);
+                                return _ShopCard(
+                                  shop: _shops[index],
+                                  onMapTap: () => _showLocationOnMap(_shops[index]),
+                                );
                               },
                             ),
                           ),
@@ -384,8 +436,9 @@ class _ShopsPageState extends State<ShopsPage> {
 
 class _ShopCard extends StatelessWidget {
   final ShopModel shop;
+  final VoidCallback? onMapTap;
 
-  const _ShopCard({required this.shop});
+  const _ShopCard({required this.shop, this.onMapTap});
 
   @override
   Widget build(BuildContext context) {
@@ -432,6 +485,38 @@ class _ShopCard extends StatelessWidget {
                       : const Icon(Icons.store, size: 60, color: Color(0xFF9E9E9E)),
                 ),
               ),
+              // Map Location Button (Top Left)
+              if (shop.latitude != null && shop.longitude != null)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onMapTap,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.map,
+                          size: 20,
+                          color: Color(0xFF8E24AA),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               // Favorite Icon (Top Right)
               Positioned(
                 top: 12,

@@ -66,6 +66,26 @@ public class ProductService {
         List<Product> products = productRepository.findByIsActiveTrue();
         return enrichProductsWithRatings(products);
     }
+
+    /**
+     * Featured ürünleri getir (en yüksek rating'e sahip aktif ürünler, maksimum 6)
+     * Review-service'den rating ve reviewCount bilgilerini çekip ekler
+     */
+    @Cacheable(value = "products", key = "'featured'")
+    public List<Product> getFeaturedProducts() {
+        List<Product> products = productRepository.findByIsActiveTrue();
+        List<Product> enrichedProducts = enrichProductsWithRatings(products);
+        
+        // Rating'e göre sırala (yüksekten düşüğe) ve ilk 6'sını al
+        return enrichedProducts.stream()
+                .sorted((a, b) -> {
+                    BigDecimal ratingA = a.getAverageRating() != null ? a.getAverageRating() : BigDecimal.ZERO;
+                    BigDecimal ratingB = b.getAverageRating() != null ? b.getAverageRating() : BigDecimal.ZERO;
+                    return ratingB.compareTo(ratingA); // Yüksekten düşüğe
+                })
+                .limit(6)
+                .collect(Collectors.toList());
+    }
     
     /**
      * Product listesini rating ve reviewCount ile zenginleştir

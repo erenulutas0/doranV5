@@ -43,3 +43,4 @@ longitude = CASE
 END
 WHERE latitude IS NULL AND longitude IS NULL AND city IS NOT NULL AND city != 'Remote';
 
+

@@ -85,8 +85,10 @@ class ApiService {
 
   Future<List<Review>> getReviewsByProductId(String productId) async {
     try {
+      // Geçici olarak direkt review-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
+      const String reviewServiceUrl = 'http://localhost:8087';
       final response = await http.get(
-        Uri.parse('$baseUrl/reviews/product/$productId'),
+        Uri.parse('$reviewServiceUrl/reviews/product/$productId'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -94,7 +96,7 @@ class ApiService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          throw Exception('API request timeout. Check if API Gateway is running on http://localhost:8080');
+          throw Exception('API request timeout. Check if Review Service is running on http://localhost:8087');
         },
       );
 
@@ -117,9 +119,9 @@ class ApiService {
         throw Exception('Failed to load reviews: HTTP ${response.statusCode}\nResponse: ${responseBody.substring(0, responseBody.length > 500 ? 500 : responseBody.length)}');
       }
     } on http.ClientException catch (e) {
-      throw Exception('Network error: Unable to connect to API Gateway at $baseUrl\n\nPlease check:\n1. API Gateway is running (docker-compose ps)\n2. API Gateway is accessible at http://localhost:8080\n3. No firewall blocking the connection\n\nError: $e');
+      throw Exception('Network error: Unable to connect to Review Service at http://localhost:8087\n\nPlease check:\n1. Review Service is running (docker-compose ps)\n2. Review Service is accessible at http://localhost:8087\n3. No firewall blocking the connection\n\nError: $e');
     } on FormatException catch (e) {
-      throw Exception('Invalid JSON response from API.\n\nThis usually means:\n1. API Gateway returned HTML error page\n2. API Gateway is not properly configured\n3. Service is down\n\nError: $e');
+      throw Exception('Invalid JSON response from Review Service.\n\nThis usually means:\n1. Review Service returned HTML error page\n2. Review Service is not properly configured\n3. Service is down\n\nError: $e');
     } catch (e) {
       throw Exception('Error fetching reviews: $e');
     }
@@ -127,8 +129,10 @@ class ApiService {
 
   Future<RatingSummary> getRatingSummary(String productId) async {
     try {
+      // Geçici olarak direkt review-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
+      const String reviewServiceUrl = 'http://localhost:8087';
       final response = await http.get(
-        Uri.parse('$baseUrl/reviews/product/$productId/summary'),
+        Uri.parse('$reviewServiceUrl/reviews/product/$productId/summary'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -136,7 +140,7 @@ class ApiService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          throw Exception('API request timeout. Check if API Gateway is running on http://localhost:8080');
+          throw Exception('API request timeout. Check if Review Service is running on http://localhost:8087');
         },
       );
 
@@ -159,9 +163,9 @@ class ApiService {
         throw Exception('Failed to load rating summary: HTTP ${response.statusCode}\nResponse: ${responseBody.substring(0, responseBody.length > 500 ? 500 : responseBody.length)}');
       }
     } on http.ClientException catch (e) {
-      throw Exception('Network error: Unable to connect to API Gateway at $baseUrl\n\nPlease check:\n1. API Gateway is running (docker-compose ps)\n2. API Gateway is accessible at http://localhost:8080\n3. No firewall blocking the connection\n\nError: $e');
+      throw Exception('Network error: Unable to connect to Review Service at http://localhost:8087\n\nPlease check:\n1. Review Service is running (docker-compose ps)\n2. Review Service is accessible at http://localhost:8087\n3. No firewall blocking the connection\n\nError: $e');
     } on FormatException catch (e) {
-      throw Exception('Invalid JSON response from API.\n\nThis usually means:\n1. API Gateway returned HTML error page\n2. API Gateway is not properly configured\n3. Service is down\n\nError: $e');
+      throw Exception('Invalid JSON response from Review Service.\n\nThis usually means:\n1. Review Service returned HTML error page\n2. Review Service is not properly configured\n3. Service is down\n\nError: $e');
     } catch (e) {
       throw Exception('Error fetching rating summary: $e');
     }
