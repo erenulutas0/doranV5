@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/models/shop_model.dart';
 import '../../../../core/services/api_service.dart';
@@ -275,7 +276,7 @@ class _ShopsPageState extends State<ShopsPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.go('/explore'),
         ),
         title: const Text(
           'Shops',

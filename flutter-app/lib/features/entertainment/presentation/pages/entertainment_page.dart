@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/models/venue_model.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/widgets/location_filter_dialog.dart';
@@ -287,7 +288,7 @@ class _EntertainmentPageState extends State<EntertainmentPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.go('/explore'),
         ),
         title: const Text(
           'Mekanlar',

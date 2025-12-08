@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/models/hobby_group_model.dart';
 import '../../../../core/services/api_service.dart';
@@ -230,6 +231,10 @@ class _HobbyGroupsPageState extends State<HobbyGroupsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/explore'),
+        ),
         title: const Text('Hobi Grupları'),
         elevation: 0,
         backgroundColor: Colors.white,

@@ -102,7 +102,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 onPressed: () {
                   final authProvider = context.read<AuthProvider>();
                   authProvider.enableGuestMode();
-                  context.go('/home');
+                  context.go('/explore');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,

@@ -328,6 +328,15 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildDrawerItem(
                   context,
+                  icon: Icons.explore_outlined,
+                  title: 'Keşfet',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/explore');
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
                   icon: Icons.shopping_bag_outlined,
                   title: 'Orders',
                   onTap: () {

@@ -39,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (success && mounted) {
-        context.go('/home');
+        context.go('/explore');
       }
     }
   }

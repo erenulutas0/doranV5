@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (success && mounted) {
-        context.go('/home');
+        context.go('/explore');
       }
       if (mounted) {
         setState(() => _isLoading = false);
@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.loginWithGoogle();
     if (success && mounted) {
-      context.go('/home');
+      context.go('/explore');
     }
     if (mounted) {
       setState(() => _isLoading = false);
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.loginWithApple();
     if (success && mounted) {
-      context.go('/home');
+      context.go('/explore');
     }
     if (mounted) {
       setState(() => _isLoading = false);
@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.loginWithSMS(phoneNumber);
       if (success && mounted) {
-        context.go('/home');
+                  context.go('/explore');
       }
       if (mounted) {
         setState(() => _isLoading = false);
