@@ -218,6 +218,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: product-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -452,6 +454,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: shop-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - microservices-network
@@ -482,6 +486,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: jobs-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - microservices-network
@@ -512,6 +518,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: hobby-group-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - microservices-network
@@ -542,6 +550,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: entertainment-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - microservices-network

@@ -6,6 +6,9 @@ import com.microservices.jobs.model.JobListing;
 import com.microservices.jobs.repository.JobListingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +31,7 @@ public class JobListingService {
      * Yeni iş ilanı oluştur
      */
     @Transactional
+    @CacheEvict(value = {"jobs", "jobsByCategory", "jobsByCity", "jobsByType"}, allEntries = true)
     public JobListingResponse createJobListing(UUID ownerId, JobListing.OwnerType ownerType, JobListingRequest request) {
         log.info("Creating job listing for owner: {} (type: {})", ownerId, ownerType);
         
@@ -93,6 +97,10 @@ public class JobListingService {
      * İlanı güncelle (sadece sahibi güncelleyebilir)
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "jobs", key = "#jobId.toString()"),
+        @CacheEvict(value = {"jobsByCategory", "jobsByCity", "jobsByType"}, allEntries = true)
+    })
     public JobListingResponse updateJobListing(UUID ownerId, UUID jobId, JobListingRequest request) {
         log.info("Updating job listing {} for owner: {}", jobId, ownerId);
         
@@ -156,6 +164,10 @@ public class JobListingService {
      * İlanı sil (soft delete)
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "jobs", key = "#jobId.toString()"),
+        @CacheEvict(value = {"jobsByCategory", "jobsByCity", "jobsByType"}, allEntries = true)
+    })
     public void deleteJobListing(UUID ownerId, UUID jobId) {
         log.info("Deleting job listing {} for owner: {}", jobId, ownerId);
         
@@ -252,6 +264,7 @@ public class JobListingService {
      * İlan detayını getir
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobs", key = "#jobId.toString()")
     public JobListingResponse getJobListingById(UUID jobId) {
         log.debug("Fetching job listing: {}", jobId);
         
@@ -266,6 +279,7 @@ public class JobListingService {
      */
     @Scheduled(cron = "0 0 * * * *") // Her saat başı çalışır
     @Transactional
+    @CacheEvict(value = {"jobs", "jobsByCategory", "jobsByCity", "jobsByType"}, allEntries = true)
     public void closeExpiredJobs() {
         log.info("Closing expired job listings...");
         LocalDateTime now = LocalDateTime.now();

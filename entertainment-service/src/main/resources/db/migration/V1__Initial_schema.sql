@@ -2,6 +2,9 @@
 -- Migration: V1__Initial_schema.sql
 -- Description: Creates the venues and events tables
 
+-- Enable PostGIS extension for geography type
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE IF NOT EXISTS venues (
     id UUID PRIMARY KEY,
     name VARCHAR(200) NOT NULL,

@@ -5,10 +5,39 @@ spring:
   application:
     name: shop-service
   
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
   datasource:
     url: jdbc:postgresql://postgres:5432/shop_db
     username: postgres
     password: postgres
+    # HikariCP Connection Pool Configuration
+    hikari:
+      # Connection pool size
+      maximum-pool-size: 10  # Maksimum bağlantı sayısı
+      minimum-idle: 5  # Minimum idle bağlantı sayısı
+      # Connection timeout
+      connection-timeout: 30000  # 30 saniye (milliseconds)
+      idle-timeout: 600000  # 10 dakika (milliseconds) - idle bağlantılar kapatılır
+      max-lifetime: 1800000  # 30 dakika (milliseconds) - bağlantının maximum ömrü
+      # Leak detection
+      leak-detection-threshold: 60000  # 60 saniye - connection leak detection
+      # Pool name for monitoring
+      pool-name: ShopServiceHikariPool
+      # Connection test query (optional, PostgreSQL için gerekli değil)
+      connection-test-query: SELECT 1
+      # Auto-commit
+      auto-commit: true
+      # Additional properties
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
   
   jpa:
     hibernate:
@@ -43,10 +72,27 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,mappings,beans
+        include: health,info,metrics,prometheus,mappings,beans,env,loggers,caches
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true  # Kubernetes liveness/readiness probes
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling for development (reduce in production)
 
 logging:
   level:

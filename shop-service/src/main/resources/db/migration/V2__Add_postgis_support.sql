@@ -1,9 +1,12 @@
 -- Shop Service - Add PostGIS Support
 -- Migration: V2__Add_postgis_support.sql
--- Description: Adds PostGIS geography column and geospatial indexes for shops
+-- Description: Enables PostGIS and adds geography column/indexes for shops
+
+-- Enable PostGIS extension (idempotent)
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Create PostGIS geography column for efficient geospatial queries
-ALTER TABLE shops 
+ALTER TABLE shops
 ADD COLUMN IF NOT EXISTS location_point GEOGRAPHY(POINT, 4326);
 
 -- Create GIST index for geospatial queries (much faster than lat/lng comparison)

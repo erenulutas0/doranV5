@@ -11,13 +11,12 @@ import '../models/hobby_group_model.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrlV1 = '$baseUrl/v1';
   
   Future<List<Product>> getProducts() async {
     try {
-      // Geçici olarak direkt product-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String productServiceUrl = 'http://localhost:8082';
       final response = await http.get(
-        Uri.parse('$productServiceUrl/products'),
+        Uri.parse('$baseUrl/products'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -58,10 +57,8 @@ class ApiService {
 
   Future<Product> getProductById(String id) async {
     try {
-      // Geçici olarak direkt product-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String productServiceUrl = 'http://localhost:8082';
       final response = await http.get(
-        Uri.parse('$productServiceUrl/products/$id'),
+        Uri.parse('$baseUrl/products/$id'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -85,10 +82,8 @@ class ApiService {
 
   Future<List<Review>> getReviewsByProductId(String productId) async {
     try {
-      // Geçici olarak direkt review-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String reviewServiceUrl = 'http://localhost:8087';
       final response = await http.get(
-        Uri.parse('$reviewServiceUrl/reviews/product/$productId'),
+        Uri.parse('$baseUrlV1/reviews/product/$productId'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -129,10 +124,8 @@ class ApiService {
 
   Future<RatingSummary> getRatingSummary(String productId) async {
     try {
-      // Geçici olarak direkt review-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String reviewServiceUrl = 'http://localhost:8087';
       final response = await http.get(
-        Uri.parse('$reviewServiceUrl/reviews/product/$productId/summary'),
+        Uri.parse('$baseUrlV1/reviews/product/$productId/summary'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -174,12 +167,10 @@ class ApiService {
   // Shop Service Methods
   Future<List<ShopModel>> getShops({int page = 0, int size = 20, String? category, String? city, String? search}) async {
     try {
-      // Geçici olarak direkt shop-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String shopServiceUrl = 'http://localhost:8092';
-      String url = '$shopServiceUrl/shops/active?page=$page&size=$size';
-      if (category != null) url = '$shopServiceUrl/shops/active/category/$category?page=$page&size=$size';
-      if (city != null) url = '$shopServiceUrl/shops/active/city/$city?page=$page&size=$size';
-      if (search != null) url = '$shopServiceUrl/shops/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
+      String url = '$baseUrlV1/shops/active?page=$page&size=$size';
+      if (category != null) url = '$baseUrlV1/shops/active/category/$category?page=$page&size=$size';
+      if (city != null) url = '$baseUrlV1/shops/active/city/$city?page=$page&size=$size';
+      if (search != null) url = '$baseUrlV1/shops/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
 
       final response = await http.get(
         Uri.parse(url),
@@ -206,10 +197,8 @@ class ApiService {
 
   Future<ShopModel> getShopById(String shopId) async {
     try {
-      // Geçici olarak direkt shop-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String shopServiceUrl = 'http://localhost:8092';
       final response = await http.get(
-        Uri.parse('$shopServiceUrl/shops/$shopId'),
+        Uri.parse('$baseUrlV1/shops/$shopId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -227,14 +216,12 @@ class ApiService {
   // Jobs Service Methods
   Future<List<JobModel>> getJobs({int page = 0, int size = 20, String? category, String? city, String? jobType, String? search, bool? remote}) async {
     try {
-      // Geçici olarak direkt jobs-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String jobsServiceUrl = 'http://localhost:8093';
-      String url = '$jobsServiceUrl/jobs/published?page=$page&size=$size';
-      if (category != null) url = '$jobsServiceUrl/jobs/published/category/$category?page=$page&size=$size';
-      if (city != null) url = '$jobsServiceUrl/jobs/published/city/$city?page=$page&size=$size';
-      if (jobType != null) url = '$jobsServiceUrl/jobs/published/job-type/$jobType?page=$page&size=$size';
-      if (remote == true) url = '$jobsServiceUrl/jobs/published/remote?page=$page&size=$size';
-      if (search != null) url = '$jobsServiceUrl/jobs/published/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
+      String url = '$baseUrlV1/jobs/published?page=$page&size=$size';
+      if (category != null) url = '$baseUrlV1/jobs/published/category/$category?page=$page&size=$size';
+      if (city != null) url = '$baseUrlV1/jobs/published/city/$city?page=$page&size=$size';
+      if (jobType != null) url = '$baseUrlV1/jobs/published/job-type/$jobType?page=$page&size=$size';
+      if (remote == true) url = '$baseUrlV1/jobs/published/remote?page=$page&size=$size';
+      if (search != null) url = '$baseUrlV1/jobs/published/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
 
       final response = await http.get(
         Uri.parse(url),
@@ -261,10 +248,8 @@ class ApiService {
 
   Future<JobModel> getJobById(String jobId) async {
     try {
-      // Geçici olarak direkt jobs-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String jobsServiceUrl = 'http://localhost:8093';
       final response = await http.get(
-        Uri.parse('$jobsServiceUrl/jobs/$jobId'),
+        Uri.parse('$baseUrlV1/jobs/$jobId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -282,12 +267,10 @@ class ApiService {
   // Venues Service Methods
   Future<List<VenueModel>> getVenues({int page = 0, int size = 20, String? venueType, String? city, String? search}) async {
     try {
-      // Geçici olarak direkt entertainment-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String entertainmentServiceUrl = 'http://localhost:8095';
-      String url = '$entertainmentServiceUrl/venues/active?page=$page&size=$size';
-      if (venueType != null) url = '$entertainmentServiceUrl/venues/active/type/$venueType?page=$page&size=$size';
-      if (city != null) url = '$entertainmentServiceUrl/venues/active/city/$city?page=$page&size=$size';
-      if (search != null) url = '$entertainmentServiceUrl/venues/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
+      String url = '$baseUrlV1/venues/active?page=$page&size=$size';
+      if (venueType != null) url = '$baseUrlV1/venues/active/type/$venueType?page=$page&size=$size';
+      if (city != null) url = '$baseUrlV1/venues/active/city/$city?page=$page&size=$size';
+      if (search != null) url = '$baseUrlV1/venues/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
 
       final response = await http.get(
         Uri.parse(url),
@@ -308,10 +291,8 @@ class ApiService {
 
   Future<VenueModel> getVenueById(String venueId) async {
     try {
-      // Geçici olarak direkt entertainment-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String entertainmentServiceUrl = 'http://localhost:8095';
       final response = await http.get(
-        Uri.parse('$entertainmentServiceUrl/venues/$venueId'),
+        Uri.parse('$baseUrlV1/venues/$venueId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -329,12 +310,10 @@ class ApiService {
   // Hobby Groups Service Methods
   Future<List<HobbyGroupModel>> getHobbyGroups({int page = 0, int size = 20, String? category, String? location, String? search}) async {
     try {
-      // Geçici olarak direkt hobby-group-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String hobbyGroupServiceUrl = 'http://localhost:8096';
-      String url = '$hobbyGroupServiceUrl/hobby-groups/active?page=$page&size=$size';
-      if (category != null) url = '$hobbyGroupServiceUrl/hobby-groups/active/category/$category?page=$page&size=$size';
-      if (location != null) url = '$hobbyGroupServiceUrl/hobby-groups/active/location/$location?page=$page&size=$size';
-      if (search != null) url = '$hobbyGroupServiceUrl/hobby-groups/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
+      String url = '$baseUrlV1/hobby-groups/active?page=$page&size=$size';
+      if (category != null) url = '$baseUrlV1/hobby-groups/active/category/$category?page=$page&size=$size';
+      if (location != null) url = '$baseUrlV1/hobby-groups/active/location/$location?page=$page&size=$size';
+      if (search != null) url = '$baseUrlV1/hobby-groups/active/search?q=${Uri.encodeComponent(search)}&page=$page&size=$size';
 
       final response = await http.get(
         Uri.parse(url),
@@ -361,10 +340,8 @@ class ApiService {
 
   Future<HobbyGroupModel> getHobbyGroupById(String groupId) async {
     try {
-      // Geçici olarak direkt hobby-group-service'e bağlanıyoruz (API Gateway sorunu çözülene kadar)
-      const String hobbyGroupServiceUrl = 'http://localhost:8096';
       final response = await http.get(
-        Uri.parse('$hobbyGroupServiceUrl/hobby-groups/$groupId'),
+        Uri.parse('$baseUrlV1/hobby-groups/$groupId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -382,9 +359,8 @@ class ApiService {
   // Nearby/Location-based Search Methods
   Future<List<ShopModel>> getNearbyShops(double latitude, double longitude, double radiusKm) async {
     try {
-      const String shopServiceUrl = 'http://localhost:8092';
       final response = await http.get(
-        Uri.parse('$shopServiceUrl/shops/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
+        Uri.parse('$baseUrlV1/shops/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
@@ -401,9 +377,8 @@ class ApiService {
 
   Future<List<VenueModel>> getNearbyVenues(double latitude, double longitude, double radiusKm) async {
     try {
-      const String entertainmentServiceUrl = 'http://localhost:8095';
       final response = await http.get(
-        Uri.parse('$entertainmentServiceUrl/venues/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
+        Uri.parse('$baseUrlV1/venues/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
@@ -420,9 +395,8 @@ class ApiService {
 
   Future<List<HobbyGroupModel>> getNearbyHobbyGroups(double latitude, double longitude, double radiusKm) async {
     try {
-      const String hobbyGroupServiceUrl = 'http://localhost:8096';
       final response = await http.get(
-        Uri.parse('$hobbyGroupServiceUrl/hobby-groups/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
+        Uri.parse('$baseUrlV1/hobby-groups/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
@@ -439,9 +413,8 @@ class ApiService {
 
   Future<List<JobModel>> getNearbyJobs(double latitude, double longitude, double radiusKm) async {
     try {
-      const String jobsServiceUrl = 'http://localhost:8093';
       final response = await http.get(
-        Uri.parse('$jobsServiceUrl/jobs/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
+        Uri.parse('$baseUrlV1/jobs/nearby?latitude=$latitude&longitude=$longitude&radiusKm=$radiusKm'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 

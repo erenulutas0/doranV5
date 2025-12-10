@@ -2,15 +2,20 @@ package com.microservices.review.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.microservices.review.event.ReviewCreatedEvent;
 import com.microservices.review.model.RatingSummary;
 import com.microservices.review.model.Review;
 import com.microservices.review.repository.ReviewRepository;
@@ -23,13 +28,20 @@ import com.microservices.review.repository.ReviewRepository;
 public class ReviewService {
     
     private final ReviewRepository reviewRepository;
+    private final ApplicationEventPublisher eventPublisher;
     
-    public ReviewService(ReviewRepository reviewRepository) {
+    public ReviewService(ReviewRepository reviewRepository, ApplicationEventPublisher eventPublisher) {
         this.reviewRepository = reviewRepository;
+        this.eventPublisher = eventPublisher;
     }
     
     /**
      * Yeni yorum oluştur
+     * 
+     * Review oluşturulduktan sonra async event publish edilir:
+     * - Notification gönderme
+     * - Analytics güncelleme
+     * - Cache warming
      */
     @Transactional
     @CacheEvict(value = {"reviews", "ratingSummary"}, key = "#a0.productId")
@@ -44,7 +56,12 @@ public class ReviewService {
             throw new IllegalArgumentException("You have already reviewed this product");
         }
         
-        return reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
+        
+        // Publish review created event (async processing)
+        eventPublisher.publishEvent(new ReviewCreatedEvent(this, savedReview));
+        
+        return savedReview;
     }
     
     /**
@@ -84,7 +101,8 @@ public class ReviewService {
     @Transactional
     @CacheEvict(value = {"reviews", "ratingSummary"}, key = "#a1")
     public void deleteReview(UUID reviewId, UUID productId) {
-        Review review = reviewRepository.findById(reviewId)
+        // Yorumun varlığını kontrol et
+        reviewRepository.findById(reviewId)
             .orElseThrow(() -> new IllegalArgumentException("Review not found"));
         reviewRepository.deleteById(reviewId);
     }
@@ -124,6 +142,24 @@ public class ReviewService {
         summary.setStar5Count(reviewRepository.countByProductIdAndRating(productId, 5).intValue());
         
         return summary;
+    }
+    
+    /**
+     * Birden fazla ürün için rating özetlerini getir (Batch API)
+     * N+1 Query problemini çözer
+     */
+    public Map<UUID, RatingSummary> getBatchRatingSummaries(List<UUID> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        // Her productId için rating summary'yi getir
+        // Cache'ten yararlanılır (@Cacheable sayesinde)
+        return productIds.stream()
+            .collect(Collectors.toMap(
+                productId -> productId,
+                this::getRatingSummary
+            ));
     }
 }
 

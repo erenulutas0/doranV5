@@ -19,7 +19,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/shops")
-@CrossOrigin(origins = {"http://localhost:8081", "http://localhost:8082", "http://localhost:8086", "http://127.0.0.1:8081", "http://127.0.0.1:8082", "http://127.0.0.1:8086"}, maxAge = 3600)
 @RequiredArgsConstructor
 @Slf4j
 public class ShopController {

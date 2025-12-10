@@ -2,6 +2,9 @@
 -- Migration: V1__Initial_schema.sql
 -- Description: Creates the hobby_groups and group_memberships tables
 
+-- Enable PostGIS extension for geography type
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE IF NOT EXISTS hobby_groups (
     id UUID PRIMARY KEY,
     creator_id UUID NOT NULL,

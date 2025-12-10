@@ -31,6 +31,10 @@ public class UserProductResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime publishedAt;
     
+    // Rating information (from Review Service)
+    private Double averageRating;
+    private Integer totalReviews;
+    
     public static UserProductResponse fromEntity(UserProduct product) {
         return UserProductResponse.builder()
                 .id(product.getId())

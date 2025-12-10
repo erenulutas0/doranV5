@@ -1,6 +1,7 @@
 package com.microservices.review.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -68,6 +69,20 @@ public class ReviewController {
     public ResponseEntity<RatingSummary> getRatingSummary(@PathVariable("productId") UUID productId) {
         RatingSummary summary = reviewService.getRatingSummary(productId);
         return ResponseEntity.ok(summary);
+    }
+    
+    /**
+     * Birden fazla ürün için rating özetlerini getir (Batch API)
+     * GET /reviews/batch/summary?productIds=uuid1,uuid2,uuid3
+     * 
+     * N+1 Query problemini çözer
+     */
+    @GetMapping("/batch/summary")
+    @Operation(summary = "Get batch rating summaries", description = "Birden fazla ürün için rating özetlerini tek sorguda getirir")
+    public ResponseEntity<Map<UUID, RatingSummary>> getBatchRatingSummaries(
+            @RequestParam("productIds") List<UUID> productIds) {
+        Map<UUID, RatingSummary> summaries = reviewService.getBatchRatingSummaries(productIds);
+        return ResponseEntity.ok(summaries);
     }
     
     /**

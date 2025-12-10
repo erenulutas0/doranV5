@@ -6,6 +6,8 @@ import com.microservices.shop.model.Shop;
 import com.microservices.shop.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class ShopService {
      * Yeni dükkan oluştur
      */
     @Transactional
+    @CacheEvict(value = {"shops", "shopsByCategory", "shopsByCity"}, allEntries = true)
     public ShopResponse createShop(UUID ownerId, ShopRequest request) {
         log.info("Creating shop for owner: {}", ownerId);
         
@@ -62,6 +65,10 @@ public class ShopService {
      * Dükkanı güncelle (sadece sahibi güncelleyebilir)
      */
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+            @CacheEvict(value = "shops", key = "#shopId.toString()"),
+            @CacheEvict(value = {"shopsByCategory", "shopsByCity"}, allEntries = true)
+    })
     public ShopResponse updateShop(UUID ownerId, UUID shopId, ShopRequest request) {
         log.info("Updating shop {} for owner: {}", shopId, ownerId);
         
@@ -100,6 +107,10 @@ public class ShopService {
      * Dükkanı sil (soft delete)
      */
     @Transactional
+    @org.springframework.cache.annotation.Caching(evict = {
+            @CacheEvict(value = "shops", key = "#shopId.toString()"),
+            @CacheEvict(value = {"shopsByCategory", "shopsByCity"}, allEntries = true)
+    })
     public void deleteShop(UUID ownerId, UUID shopId) {
         log.info("Deleting shop {} for owner: {}", shopId, ownerId);
         
@@ -181,6 +192,7 @@ public class ShopService {
      * Dükkan detayını getir
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "shops", key = "#shopId.toString()")
     public ShopResponse getShopById(UUID shopId) {
         log.debug("Fetching shop: {}", shopId);
         

@@ -3,8 +3,9 @@ spring:
     name: api-gateway
   cloud:
     config:
+      enabled: false # Config Server devre dışı (development için)
       uri: http://config-server:8888 # Config Server adresi (Docker container name)
-      fail-fast: true # Config Server'a bağlanamazsa uygulama başlamaz
+      fail-fast: false # Config Server'a bağlanamazsa uygulama başlamasın engellemesin
       retry:
         initial-interval: 1000
         max-attempts: 6

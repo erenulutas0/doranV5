@@ -1,5 +1,7 @@
 package com.microservices.ownproduct.service;
 
+import com.microservices.ownproduct.client.ReviewServiceClient;
+import com.microservices.ownproduct.dto.RatingSummary;
 import com.microservices.ownproduct.dto.UserProductRequest;
 import com.microservices.ownproduct.dto.UserProductResponse;
 import com.microservices.ownproduct.model.UserProduct;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 public class UserProductService {
     
     private final UserProductRepository repository;
+    private final ReviewServiceClient reviewServiceClient;
     
     /**
      * Kullanıcı için yeni ürün oluştur
@@ -151,32 +155,64 @@ public class UserProductService {
     
     /**
      * Yayında olan ürünleri sayfalı olarak getir
+     * Rating bilgileriyle zenginleştirilir (Batch API ile N+1 sorunu çözülmüştür)
      */
     @Transactional(readOnly = true)
     public Page<UserProductResponse> getPublishedProducts(Pageable pageable) {
         log.debug("Fetching published products");
-        return repository.findPublishedPublicProducts(pageable)
-                .map(UserProductResponse::fromEntity);
+        Page<UserProduct> products = repository.findPublishedPublicProducts(pageable);
+        
+        // Önce tüm ürünleri DTO'ya çevir
+        Page<UserProductResponse> productResponses = products.map(UserProductResponse::fromEntity);
+        
+        // Rating bilgilerini batch olarak al (N+1 sorunu burada çözülür!)
+        List<UUID> productIds = productResponses.getContent().stream()
+            .map(UserProductResponse::getId)
+            .collect(Collectors.toList());
+        
+        enrichProductsWithRatings(productResponses.getContent(), productIds);
+        
+        return productResponses;
     }
     
     /**
      * Kategoriye göre yayında olan ürünleri getir
+     * Rating bilgileriyle zenginleştirilir (Batch API ile N+1 sorunu çözülmüştür)
      */
     @Transactional(readOnly = true)
     public Page<UserProductResponse> getPublishedProductsByCategory(String category, Pageable pageable) {
         log.debug("Fetching published products by category: {}", category);
-        return repository.findPublishedPublicProductsByCategory(category, pageable)
-                .map(UserProductResponse::fromEntity);
+        Page<UserProduct> products = repository.findPublishedPublicProductsByCategory(category, pageable);
+        
+        Page<UserProductResponse> productResponses = products.map(UserProductResponse::fromEntity);
+        
+        List<UUID> productIds = productResponses.getContent().stream()
+            .map(UserProductResponse::getId)
+            .collect(Collectors.toList());
+        
+        enrichProductsWithRatings(productResponses.getContent(), productIds);
+        
+        return productResponses;
     }
     
     /**
      * Arama sorgusu ile yayında olan ürünleri getir
+     * Rating bilgileriyle zenginleştirilir (Batch API ile N+1 sorunu çözülmüştür)
      */
     @Transactional(readOnly = true)
     public Page<UserProductResponse> searchPublishedProducts(String query, Pageable pageable) {
         log.debug("Searching published products with query: {}", query);
-        return repository.searchPublishedPublicProducts(query, pageable)
-                .map(UserProductResponse::fromEntity);
+        Page<UserProduct> products = repository.searchPublishedPublicProducts(query, pageable);
+        
+        Page<UserProductResponse> productResponses = products.map(UserProductResponse::fromEntity);
+        
+        List<UUID> productIds = productResponses.getContent().stream()
+            .map(UserProductResponse::getId)
+            .collect(Collectors.toList());
+        
+        enrichProductsWithRatings(productResponses.getContent(), productIds);
+        
+        return productResponses;
     }
     
     /**
@@ -198,6 +234,35 @@ public class UserProductService {
         }
         
         return UserProductResponse.fromEntity(product);
+    }
+    
+    /**
+     * Ürünleri rating bilgileriyle zenginleştir
+     * Batch API kullanarak N+1 Query problemini çözer
+     * 
+     * ÖNCE: Her ürün için ayrı ayrı Review Service'e istek atılırdı (N+1 problem)
+     * SONRA: Tüm ürünler için tek bir batch request ile rating bilgileri alınır
+     */
+    private void enrichProductsWithRatings(List<UserProductResponse> products, List<UUID> productIds) {
+        if (products.isEmpty()) {
+            return;
+        }
+        
+        log.debug("Enriching {} products with rating information using batch API", products.size());
+        
+        // Batch API ile tüm rating'leri tek seferde al
+        Map<UUID, RatingSummary> ratingSummaries = reviewServiceClient.getBatchRatingSummaries(productIds);
+        
+        // Her ürüne kendi rating'ini ata
+        for (UserProductResponse product : products) {
+            RatingSummary summary = ratingSummaries.get(product.getId());
+            if (summary != null) {
+                product.setAverageRating(summary.getAverageRating());
+                product.setTotalReviews(summary.getTotalReviews());
+            }
+        }
+        
+        log.debug("Successfully enriched {} products with ratings", products.size());
     }
 }
 

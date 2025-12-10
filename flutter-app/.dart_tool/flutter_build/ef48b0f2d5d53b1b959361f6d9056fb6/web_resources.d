@@ -1,1 +1,0 @@
- build\\web\\manifest.json:  C:\\Users\\pc\\OneDrive\\Masaüstü\\java-microservices\\flutter-app\\web\\index.html C:\\Users\\pc\\OneDrive\\Masaüstü\\java-microservices\\flutter-app\\web\\manifest.json

@@ -8,29 +8,14 @@ spring:
   # Redis yapılandırması (Rate Limiting için)
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
       password:  # Şifre yoksa boş bırakın
       timeout: 2000ms  # Connection timeout
   
   cloud:
     gateway:
-      # Global CORS yapılandırması
-      globalcors:
-        cors-configurations:
-          '[/**]':  # Tüm path'ler için
-            # allowedOrigins: "*"  # allowCredentials: true ile kullanılamaz
-            allowedOriginPatterns: "*"  # Pattern kullanarak tüm origin'lere izin ver
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true  # Credentials'a izin ver
-            maxAge: 3600  # Preflight cache süresi (saniye)
+      # CORS is handled by CorsConfig.java bean
       
       # Default filters (tüm route'lar için geçerli)
       default-filters:
@@ -143,13 +128,14 @@ spring:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notification
         
-        # Review Service route
-        - id: review-service
+        # Review Service route (v1)
+        - id: review-service-v1
           uri: lb://review-service
           predicates:
-            - Path=/api/reviews/**
+            - Path=/api/v1/reviews/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /reviews/** kalır
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /reviews/** kalır
+            - AddRequestHeader=X-API-Version, v1
             # Rate Limiting (Review Service için özel limit)
             - name: RequestRateLimiter
               args:
@@ -162,13 +148,14 @@ spring:
                 name: reviewServiceCircuitBreaker
                 fallbackUri: forward:/fallback/review
         
-        # Media Service route
-        - id: media-service
+        # Media Service route (v1)
+        - id: media-service-v1
           uri: lb://media-service
           predicates:
-            - Path=/api/media/**
+            - Path=/api/v1/media/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /media/** kalır
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /media/** kalır
+            - AddRequestHeader=X-API-Version, v1
             # Rate Limiting (Media Service için özel limit - dosya upload yoğun)
             - name: RequestRateLimiter
               args:
@@ -181,13 +168,14 @@ spring:
                 name: mediaServiceCircuitBreaker
                 fallbackUri: forward:/fallback/media
         
-        # Own Product Service route
-        - id: own-product-service
+        # Own Product Service route (v1)
+        - id: own-product-service-v1
           uri: lb://own-product-service
           predicates:
-            - Path=/api/user-products/**
+            - Path=/api/v1/user-products/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /user-products/** kalır
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /user-products/** kalır
+            - AddRequestHeader=X-API-Version, v1
             # Rate Limiting (Own Product Service için özel limit)
             - name: RequestRateLimiter
               args:
@@ -200,77 +188,53 @@ spring:
                 name: ownProductServiceCircuitBreaker
                 fallbackUri: forward:/fallback/own-product
         
-        # Shop Service route
-        - id: shop-service
+        # Shop Service route (v1)
+        - id: shop-service-v1
           uri: lb://shop-service
           predicates:
-            - Path=/api/shops/**
+            - Path=/api/v1/shops/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /shops/** kalır
-            # Rate Limiting (Shop Service için özel limit)
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 30  # Shop service için yüksek limit (okuma yoğun)
-                redis-rate-limiter.burstCapacity: 60
-                redis-rate-limiter.requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /shops/** kalır
+            - AddRequestHeader=X-API-Version, v1
             - name: CircuitBreaker
               args:
                 name: shopServiceCircuitBreaker
                 fallbackUri: forward:/fallback/shop
         
-        # Jobs Service route
-        - id: jobs-service
+        # Jobs Service route (v1)
+        - id: jobs-service-v1
           uri: lb://jobs-service
           predicates:
-            - Path=/api/jobs/**
+            - Path=/api/v1/jobs/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /jobs/** kalır
-            # Rate Limiting (Jobs Service için özel limit)
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 30  # Jobs service için yüksek limit (okuma yoğun)
-                redis-rate-limiter.burstCapacity: 60
-                redis-rate-limiter.requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /jobs/** kalır
+            - AddRequestHeader=X-API-Version, v1
             - name: CircuitBreaker
               args:
                 name: jobsServiceCircuitBreaker
                 fallbackUri: forward:/fallback/jobs
         
-        # Hobby Group Service route
-        - id: hobby-group-service
+        # Hobby Group Service route (v1)
+        - id: hobby-group-service-v1
           uri: lb://hobby-group-service
           predicates:
-            - Path=/api/hobby-groups/**
+            - Path=/api/v1/hobby-groups/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır, /hobby-groups/** kalır
-            # Rate Limiting (Hobby Group Service için özel limit)
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 30  # Hobby Group service için yüksek limit (okuma yoğun)
-                redis-rate-limiter.burstCapacity: 60
-                redis-rate-limiter.requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+            - StripPrefix=2  # /api/v1 kısmını çıkarır, /hobby-groups/** kalır
+            - AddRequestHeader=X-API-Version, v1
             - name: CircuitBreaker
               args:
                 name: hobbyGroupServiceCircuitBreaker
                 fallbackUri: forward:/fallback/hobby-group
         
-        # Entertainment Service route
-        - id: entertainment-service
+        # Entertainment Service route (v1)
+        - id: entertainment-service-v1
           uri: lb://entertainment-service
           predicates:
-            - Path=/api/venues/**,/api/events/**
+            - Path=/api/v1/venues/**,/api/v1/events/**
           filters:
-            - StripPrefix=1  # /api kısmını çıkarır
-            # Rate Limiting (Entertainment Service için özel limit)
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 30  # Entertainment service için yüksek limit (okuma yoğun)
-                redis-rate-limiter.burstCapacity: 60
-                redis-rate-limiter.requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+            - StripPrefix=2  # /api/v1 kısmını çıkarır
+            - AddRequestHeader=X-API-Version, v1
             - name: CircuitBreaker
               args:
                 name: entertainmentServiceCircuitBreaker

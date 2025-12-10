@@ -1,6 +1,13 @@
+# Multi-stage build: Build stage
+FROM maven:3.9-eclipse-temurin-17-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8093
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
