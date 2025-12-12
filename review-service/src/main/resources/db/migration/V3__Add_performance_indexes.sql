@@ -25,7 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_pending ON reviews(is_approved, created_a
 CREATE INDEX IF NOT EXISTS idx_reviews_summary ON reviews(product_id, is_approved, rating);
 
 -- Full-text search için (review content searching)
-CREATE INDEX IF NOT EXISTS idx_reviews_search ON reviews USING GIN(to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(content, ''))) WHERE is_approved = true;
+CREATE INDEX IF NOT EXISTS idx_reviews_search ON reviews USING GIN(to_tsvector('english', COALESCE(comment, ''))) WHERE is_approved = true;
 
 -- Created date için sorting
 CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC);

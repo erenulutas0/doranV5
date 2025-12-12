@@ -43,8 +43,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     });
 
     try {
-      final reviews = await _apiService.getReviewsByProductId(widget.productId);
-      final ratingSummary = await _apiService.getRatingSummary(widget.productId);
+      // Try to load reviews and rating summary separately
+      // If one fails, the other should still work
+      List<Review> reviews = [];
+      RatingSummary? ratingSummary;
+      
+      // Load reviews
+      try {
+        reviews = await _apiService.getReviewsByProductId(widget.productId);
+        print('✅ Loaded ${reviews.length} reviews for product ${widget.productId}');
+        // Debug: Print first review if exists
+        if (reviews.isNotEmpty) {
+          final firstReview = reviews.first;
+          print('   First review: ${firstReview.userName}, rating: ${firstReview.rating}, comment: ${firstReview.comment?.substring(0, firstReview.comment!.length > 50 ? 50 : firstReview.comment!.length)}...');
+        }
+      } catch (e) {
+        print('❌ Error loading reviews: $e');
+        reviews = [];
+      }
+      
+      // Try to load rating summary, but don't fail if it errors
+      try {
+        ratingSummary = await _apiService.getRatingSummary(widget.productId);
+        print('✅ Loaded rating summary: avg=${ratingSummary?.averageRating}, total=${ratingSummary?.totalReviews}');
+        if (ratingSummary != null) {
+          print('   Star counts: 5★=${ratingSummary.star5Count}, 4★=${ratingSummary.star4Count}, 3★=${ratingSummary.star3Count}, 2★=${ratingSummary.star2Count}, 1★=${ratingSummary.star1Count}');
+        }
+      } catch (e) {
+        // Rating summary error is not critical, we can still show reviews
+        print('⚠️ Rating summary error (non-critical): $e');
+      }
       
       setState(() {
         _reviews = reviews;
@@ -52,10 +80,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         _isLoadingReviews = false;
       });
     } catch (e) {
-      setState(() {
-        _reviewsError = e.toString();
-        _isLoadingReviews = false;
-      });
+      // If error is 404 or empty response, it means no reviews yet - that's okay
+      final errorStr = e.toString();
+      print('❌ Error in _loadReviewsAndRating: $errorStr');
+      if (errorStr.contains('404') || errorStr.contains('Failed to load reviews')) {
+        setState(() {
+          _reviews = [];
+          _ratingSummary = null;
+          _isLoadingReviews = false;
+          // Don't set error for 404 - it just means no reviews yet
+        });
+      } else {
+        setState(() {
+          _reviewsError = errorStr;
+          _isLoadingReviews = false;
+        });
+      }
     }
   }
 
@@ -322,6 +362,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildStarDistribution(int stars, double percentage, BuildContext context) {
+    // Percentage'i 0-1 aralığına normalize et
+    final normalizedPercentage = (percentage / 100.0).clamp(0.0, 1.0);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -329,27 +372,34 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         children: [
           Text(
             '$stars',
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(width: 4),
           const Icon(Icons.star, size: 12, color: Colors.amber),
           const SizedBox(width: 8),
           Container(
-            width: 60,
-            height: 6,
+            width: 80,
+            height: 8,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(3),
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(4),
             ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: percentage / 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(3),
+            child: Stack(
+              children: [
+                // Dolgu çubuğu
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: normalizedPercentage,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -412,7 +462,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           )
         else
-          ..._reviews.take(5).map((review) => _buildReviewCard(context, review)),
+          ..._reviews
+              .where((review) {
+                // Comment kontrolü - null, boş veya sadece whitespace olmamalı
+                final comment = review.comment;
+                return comment != null && comment.trim().isNotEmpty;
+              })
+              .take(10)
+              .map((review) => _buildReviewCard(context, review)),
       ],
     );
   }
@@ -433,6 +490,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Kullanıcı avatarı
               CircleAvatar(
@@ -451,11 +509,43 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      review.userName,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            review.userName,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        // Yıldız sayısını göster
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${review.rating}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -489,6 +579,80 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               review.comment!,
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            // Beğenme butonu ve sayısı
+            Row(
+              children: [
+                // Beğenme butonu (sadece kayıtlı kullanıcılar için - şimdilik herkese açık)
+                InkWell(
+                  onTap: () async {
+                    try {
+                      final updatedReview = await _apiService.markReviewAsHelpful(review.id);
+                      setState(() {
+                        final index = _reviews.indexWhere((r) => r.id == review.id);
+                        if (index != -1) {
+                          _reviews[index] = updatedReview;
+                        }
+                      });
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Yorum beğenildi!'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Hata: ${e.toString()}'),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.thumb_up_outlined,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Yardımcı Oldu',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Beğenme sayısı
+                Text(
+                  '${review.helpfulCount} kişi bunu beğendi',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

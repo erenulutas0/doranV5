@@ -121,8 +121,9 @@ public class ReviewService {
     
     /**
      * Ürün için rating özeti getir
+     * Cache geçici olarak devre dışı - Redis serialization sorunu nedeniyle
      */
-    @Cacheable(value = "ratingSummary", key = "#a0")
+    // @Cacheable(value = "ratingSummary", key = "#a0")
     public RatingSummary getRatingSummary(UUID productId) {
         Double avgRating = reviewRepository.calculateAverageRating(productId);
         Long totalReviews = reviewRepository.countByProductId(productId);

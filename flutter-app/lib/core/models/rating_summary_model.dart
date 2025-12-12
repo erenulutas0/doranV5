@@ -62,5 +62,22 @@ class RatingSummary {
     }
     return (count * 100.0) / totalReviews;
   }
+  
+  int getStarCount(int star) {
+    switch (star) {
+      case 1:
+        return star1Count;
+      case 2:
+        return star2Count;
+      case 3:
+        return star3Count;
+      case 4:
+        return star4Count;
+      case 5:
+        return star5Count;
+      default:
+        return 0;
+    }
+  }
 }
 

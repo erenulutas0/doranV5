@@ -13,6 +13,12 @@ class ExplorePage extends StatelessWidget {
     const neonGreen = Color(0xFFA4F22E);
     final items = [
       _ExploreItem(
+        title: 'Products',
+        subtitle: 'Ürünleri keşfet',
+        icon: Icons.shopping_cart_outlined,
+        route: '/products',
+      ),
+      _ExploreItem(
         title: 'Shops',
         subtitle: 'Mağazaları keşfet',
         icon: Icons.store_mall_directory,

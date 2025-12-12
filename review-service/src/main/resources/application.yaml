@@ -79,7 +79,7 @@ management:
 
 # Flyway Configuration
 flyway:
-  enabled: true
+  enabled: false  # Geçici olarak devre dışı - V8 migration sorunu nedeniyle
   locations: classpath:db/migration
   baseline-on-migrate: true
 

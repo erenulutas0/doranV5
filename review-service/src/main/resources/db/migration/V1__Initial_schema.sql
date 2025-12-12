@@ -2,6 +2,9 @@
 -- Migration: V1__Initial_schema.sql
 -- Description: Creates the reviews table
 
+-- UUID extension'ı etkinleştir (gen_random_uuid() için)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY,
     product_id UUID NOT NULL,

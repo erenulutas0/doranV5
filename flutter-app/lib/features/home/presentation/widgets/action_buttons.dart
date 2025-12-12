@@ -15,9 +15,22 @@ class ActionButtons extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          // First Row: Shop, Jobs, Own Product (if authenticated)
+          // First Row: Products, Shop, Jobs
           Row(
             children: [
+              Expanded(
+                child: _ActionButton(
+                  label: 'Products',
+                  icon: Icons.shopping_cart_outlined,
+                  backgroundColor: const Color(0xFF1E1E1E),
+                  accentColor: const Color(0xFFCCFF00),
+                  onTap: () {
+                    debugPrint('Navigating to /products');
+                    context.go('/products?from=home');
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: _ActionButton(
                   label: 'Shop',
@@ -43,28 +56,12 @@ class ActionButtons extends StatelessWidget {
                   },
                 ),
               ),
-              // Own Product sadece giriş yapıldığında göster
-              if (isAuthenticated) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionButton(
-                    label: 'Own Product',
-                    icon: Icons.add_business_outlined,
-                    backgroundColor: const Color(0xFF1E1E1E),
-                    accentColor: const Color(0xFFCCFF00),
-                    onTap: () {
-                      debugPrint('Navigating to /own-products');
-                      context.push('/own-products');
-                    },
-                  ),
-                ),
-              ],
             ],
           ),
           
           const SizedBox(height: 12),
           
-          // Second Row: Mekanlar, Hobi Buluşmaları
+          // Second Row: Mekanlar, Hobi, Own Product (if authenticated)
           Row(
             children: [
               Expanded(
@@ -92,6 +89,22 @@ class ActionButtons extends StatelessWidget {
                   },
                 ),
               ),
+              // Own Product sadece giriş yapıldığında göster
+              if (isAuthenticated) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ActionButton(
+                    label: 'Own Product',
+                    icon: Icons.add_business_outlined,
+                    backgroundColor: const Color(0xFF1E1E1E),
+                    accentColor: const Color(0xFFCCFF00),
+                    onTap: () {
+                      debugPrint('Navigating to /own-products');
+                      context.push('/own-products');
+                    },
+                  ),
+                ),
+              ],
             ],
           ),
         ],

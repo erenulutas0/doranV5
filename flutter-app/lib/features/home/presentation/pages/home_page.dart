@@ -447,9 +447,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // Navigate to all products
+                      context.go('/products?from=home');
                     },
-                    child: const Text('See All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFCCFF00),
+                    ),
+                    child: const Text(
+                      'See All',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),

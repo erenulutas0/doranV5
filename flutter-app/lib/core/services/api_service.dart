@@ -13,6 +13,8 @@ import 'rum_logger.dart';
 class ApiService {
   static const String baseUrl = 'http://localhost:8080/api';
   static const String baseUrlV1 = '$baseUrl/v1';
+  // Review service direct URL (for rating summary - API Gateway routing issue)
+  static const String reviewServiceUrl = 'http://localhost:8087';
   
   Future<List<Product>> getProducts() async {
     final stopwatch = Stopwatch()..start();
@@ -134,8 +136,9 @@ class ApiService {
 
   Future<List<Review>> getReviewsByProductId(String productId) async {
     try {
+      // Use direct review-service URL to avoid CORS issues
       final response = await http.get(
-        Uri.parse('$baseUrlV1/reviews/product/$productId'),
+        Uri.parse('$reviewServiceUrl/reviews/product/$productId'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -176,8 +179,9 @@ class ApiService {
 
   Future<RatingSummary> getRatingSummary(String productId) async {
     try {
+      // Use direct review-service URL due to API Gateway routing issue
       final response = await http.get(
-        Uri.parse('$baseUrlV1/reviews/product/$productId/summary'),
+        Uri.parse('$reviewServiceUrl/reviews/product/$productId/summary'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -213,6 +217,33 @@ class ApiService {
       throw Exception('Invalid JSON response from Review Service.\n\nThis usually means:\n1. Review Service returned HTML error page\n2. Review Service is not properly configured\n3. Service is down\n\nError: $e');
     } catch (e) {
       throw Exception('Error fetching rating summary: $e');
+    }
+  }
+
+  /// Mark a review as helpful
+  Future<Review> markReviewAsHelpful(String reviewId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrlV1/reviews/$reviewId/helpful'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('API request timeout');
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return Review.fromJson(data);
+      } else {
+        throw Exception('Failed to mark review as helpful: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error marking review as helpful: $e');
     }
   }
 

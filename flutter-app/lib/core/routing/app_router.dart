@@ -20,6 +20,7 @@ import '../../features/jobs/presentation/pages/jobs_page.dart';
 import '../../features/own-products/presentation/pages/own_products_page.dart';
 import '../../features/entertainment/presentation/pages/entertainment_page.dart';
 import '../../features/hobby-groups/presentation/pages/hobby_groups_page.dart';
+import '../../features/products/presentation/pages/products_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -117,6 +118,12 @@ class AppRouter {
         path: '/hobby-groups',
         builder: (context, state) => HobbyGroupsPage(
           initialCity: state.uri.queryParameters['city'],
+          from: state.uri.queryParameters['from'],
+        ),
+      ),
+      GoRoute(
+        path: '/products',
+        builder: (context, state) => ProductsPage(
           from: state.uri.queryParameters['from'],
         ),
       ),

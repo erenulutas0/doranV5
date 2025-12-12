@@ -31,11 +31,18 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
         
-        // Prefer explicit origins; if not set, fall back to allow-all for dev
+        // Set allowed origins - if credentials are allowed, we cannot use wildcard
+        // Default to Flutter web app origin for development
         if (corsProps.getAllowedOrigins() != null && !corsProps.getAllowedOrigins().isEmpty()) {
             corsConfig.setAllowedOrigins(corsProps.getAllowedOrigins());
         } else {
-            corsConfig.setAllowedOriginPatterns(List.of("*"));
+            // Default origins for development (Flutter web app)
+            corsConfig.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8088",
+                "http://127.0.0.1:8088",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            ));
         }
         
         // Allowed methods
@@ -49,7 +56,16 @@ public class CorsConfig {
         if (corsProps.getAllowedHeaders() != null && !corsProps.getAllowedHeaders().isEmpty()) {
             corsConfig.setAllowedHeaders(corsProps.getAllowedHeaders());
         } else {
-            corsConfig.setAllowedHeaders(List.of("*"));
+            corsConfig.setAllowedHeaders(Arrays.asList(
+                "Content-Type",
+                "Accept",
+                "Authorization",
+                "X-Requested-With",
+                "X-API-Version",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+            ));
         }
         
         // Expose custom headers to client
@@ -66,6 +82,7 @@ public class CorsConfig {
         }
         
         // Allow credentials (cookies, authorization headers)
+        // Note: When allowCredentials is true, cannot use wildcard origins
         corsConfig.setAllowCredentials(Objects.requireNonNullElse(corsProps.getAllowCredentials(), true));
         
         // Cache preflight response for 1 hour
@@ -74,7 +91,8 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
         
-        return new CorsWebFilter(source);
+        CorsWebFilter filter = new CorsWebFilter(source);
+        return filter;
     }
 }
 
