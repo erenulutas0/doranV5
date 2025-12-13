@@ -88,3 +88,5 @@ for ($i = 0; $i -lt $sqlStatements.Length; $i += $batchSize) {
 Write-Host "`nTamamlandı! Review sayısı kontrol ediliyor..." -ForegroundColor Green
 docker exec postgres psql -U postgres -d review_db -c "SELECT COUNT(*) as total_reviews, COUNT(DISTINCT product_id) as product_count FROM reviews;"
 
+
+

@@ -48,3 +48,5 @@ ON CONFLICT (product_id, user_id) DO NOTHING;
 -- 2. Her ürün için 5-15 arası review ekleyin
 -- 3. Her review için 5-10 arası yorum ekleyin
 
+
+

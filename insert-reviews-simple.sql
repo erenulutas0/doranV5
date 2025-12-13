@@ -118,3 +118,5 @@ SELECT
     ROUND(AVG(rating), 2) as average_rating
 FROM reviews;
 
+
+
