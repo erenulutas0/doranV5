@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -100,5 +101,12 @@ public class Review implements Serializable {
      * Güncellenme Tarihi
      */
     private LocalDateTime updatedAt;
+    
+    /**
+     * Kullanıcı bu yorumu beğenmiş mi? (Transient - database'de saklanmaz)
+     * Sadece API response'unda kullanılır
+     */
+    @Transient
+    private Boolean likedByUser = false;
 }
 

@@ -6,6 +6,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 import '../../../../core/providers/product_provider.dart';
 import '../../../../core/providers/cart_provider.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/price_formatter.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/models/review_model.dart';
@@ -29,6 +30,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   RatingSummary? _ratingSummary;
   bool _isLoadingReviews = true;
   String? _reviewsError;
+  // Spam beğeniyi engellemek için: hangi review'lar beğenildi ve hangileri loading
+  final Set<String> _likedReviewIds = <String>{};
+  final Set<String> _loadingHelpfulReviewIds = <String>{};
 
   @override
   void initState() {
@@ -48,15 +52,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       List<Review> reviews = [];
       RatingSummary? ratingSummary;
       
-      // Load reviews
+      // Load reviews with userId if authenticated
       try {
-        reviews = await _apiService.getReviewsByProductId(widget.productId);
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final userId = authProvider.userId;
+        
+        reviews = await _apiService.getReviewsByProductId(widget.productId, userId: userId);
         print('✅ Loaded ${reviews.length} reviews for product ${widget.productId}');
+        
+        // Kullanıcının beğendiği review'ları _likedReviewIds Set'ine ekle
+        final likedIds = reviews
+            .where((review) => review.likedByUser)
+            .map((review) => review.id)
+            .toSet();
+        
+        print('👍 Backend\'den gelen likedByUser durumu:');
+        for (var review in reviews) {
+          if (review.likedByUser) {
+            print('   Review ${review.id}: likedByUser = true');
+          }
+        }
+        print('   Toplam beğenilen review sayısı: ${likedIds.length}');
+        
         // Debug: Print first review if exists
         if (reviews.isNotEmpty) {
           final firstReview = reviews.first;
-          print('   First review: ${firstReview.userName}, rating: ${firstReview.rating}, comment: ${firstReview.comment?.substring(0, firstReview.comment!.length > 50 ? 50 : firstReview.comment!.length)}...');
+          print('   First review: ${firstReview.userName}, rating: ${firstReview.rating}, likedByUser: ${firstReview.likedByUser}, comment: ${firstReview.comment?.substring(0, firstReview.comment!.length > 50 ? 50 : firstReview.comment!.length)}...');
         }
+        
+        setState(() {
+          // ÖNCE temizle, sonra yeni değerleri ekle
+          _likedReviewIds.clear();
+          _likedReviewIds.addAll(likedIds);
+          print('✅ _likedReviewIds güncellendi: ${_likedReviewIds.length} adet');
+        });
       } catch (e) {
         print('❌ Error loading reviews: $e');
         reviews = [];
@@ -582,77 +611,188 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
             const SizedBox(height: 12),
             // Beğenme butonu ve sayısı
-            Row(
-              children: [
-                // Beğenme butonu (sadece kayıtlı kullanıcılar için - şimdilik herkese açık)
-                InkWell(
-                  onTap: () async {
-                    try {
-                      final updatedReview = await _apiService.markReviewAsHelpful(review.id);
-                      setState(() {
-                        final index = _reviews.indexWhere((r) => r.id == review.id);
-                        if (index != -1) {
-                          _reviews[index] = updatedReview;
-                        }
-                      });
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Yorum beğenildi!'),
-                            duration: Duration(seconds: 2),
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, _) {
+                final bool isAuthenticated = authProvider.isAuthenticated;
+                final String? userId = authProvider.userId;
+                
+                return Row(
+                  children: [
+                    // Beğenme butonu (SADECE giriş yapmış kullanıcılar için)
+                    if (isAuthenticated && userId != null && userId.isNotEmpty)
+                      InkWell(
+                        onTap: _likedReviewIds.contains(review.id) || _loadingHelpfulReviewIds.contains(review.id)
+                            ? null // Disable if already liked or loading
+                            : () async {
+                                // Spam beğeniyi engelle: loading state ekle
+                                setState(() {
+                                  _loadingHelpfulReviewIds.add(review.id);
+                                });
+
+                                try {
+                                  // Debug: userId kontrolü
+                                  print('🔍 Beğeni İsteği:');
+                                  print('   Review ID: ${review.id}');
+                                  print('   User ID: $userId');
+                                  print('   User ID boş mu?: ${userId == null || userId.isEmpty}');
+                                  
+                                  if (userId == null || userId.isEmpty) {
+                                    throw Exception('User ID is required to like a review');
+                                  }
+                                  
+                                  print('📤 API çağrısı yapılıyor...');
+                                  final updatedReview = await _apiService.markReviewAsHelpful(review.id, userId);
+                                  print('✅ API çağrısı başarılı!');
+                                  print('   Güncellenmiş helpfulCount: ${updatedReview.helpfulCount}');
+                                  
+                                  // Review'ları yeniden yükle (cache'den güncel veriyi al)
+                                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                  final currentUserId = authProvider.userId;
+                                  print('🔄 Reviewlar yeniden yükleniyor...');
+                                  final refreshedReviews = await _apiService.getReviewsByProductId(
+                                    widget.productId,
+                                    userId: currentUserId,
+                                  );
+                                  print('✅ Reviewlar yüklendi: ${refreshedReviews.length} adet');
+                                  
+                                  // Kullanıcının beğendiği review'ları güncelle
+                                  final likedIds = refreshedReviews
+                                      .where((r) => r.likedByUser)
+                                      .map((r) => r.id)
+                                      .toSet();
+                                  print('👍 Beğenilen reviewlar: ${likedIds.length} adet');
+                                  
+                                  // Güncellenmiş review'ı bul
+                                  final updatedReviewFromList = refreshedReviews.firstWhere(
+                                    (r) => r.id == review.id,
+                                    orElse: () => updatedReview,
+                                  );
+                                  print('📊 Güncellenmiş review helpfulCount: ${updatedReviewFromList.helpfulCount}');
+                                  
+                                  setState(() {
+                                    // Beğenildi olarak işaretle
+                                    _likedReviewIds.add(review.id);
+                                    _likedReviewIds.addAll(likedIds);
+                                    _loadingHelpfulReviewIds.remove(review.id);
+                                    
+                                    // Tüm review'ları güncelle (güncel helpfulCount ile)
+                                    _reviews = refreshedReviews;
+                                  });
+                                  
+                                  print('✅ State güncellendi!');
+                                  
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Yorum beğenildi! (${updatedReviewFromList.helpfulCount} beğeni)'),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  setState(() {
+                                    _loadingHelpfulReviewIds.remove(review.id);
+                                    
+                                    // Eğer "already marked" hatası alırsak, beğenildi olarak işaretle
+                                    if (e.toString().contains('already marked') || 
+                                        e.toString().contains('409')) {
+                                      _likedReviewIds.add(review.id);
+                                    }
+                                  });
+                                  
+                                  if (context.mounted) {
+                                    String errorMessage = 'Hata: Yorum beğenilemedi';
+                                    String errorDetails = e.toString();
+                                    
+                                    // Hata detaylarını logla
+                                    print('❌ Beğeni hatası: $errorDetails');
+                                    
+                                    if (errorDetails.contains('already marked') || 
+                                        errorDetails.contains('409')) {
+                                      errorMessage = 'Bu yorumu zaten beğenmişsiniz';
+                                    } else if (errorDetails.contains('not found') || 
+                                               errorDetails.contains('404')) {
+                                      errorMessage = 'Yorum bulunamadı';
+                                    } else {
+                                      errorMessage = 'Beğeni kaydedilemedi. Lütfen tekrar deneyin.';
+                                    }
+                                    
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('$errorMessage\n\nDetay: ${errorDetails.substring(0, errorDetails.length > 100 ? 100 : errorDetails.length)}'),
+                                        backgroundColor: Theme.of(context).colorScheme.error,
+                                        duration: const Duration(seconds: 5),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        child: Opacity(
+                          opacity: _likedReviewIds.contains(review.id) || _loadingHelpfulReviewIds.contains(review.id) ? 0.5 : 1.0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _likedReviewIds.contains(review.id)
+                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                                  : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _likedReviewIds.contains(review.id)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).dividerColor,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_loadingHelpfulReviewIds.contains(review.id))
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).colorScheme.primary,
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Icon(
+                                    _likedReviewIds.contains(review.id)
+                                        ? Icons.thumb_up
+                                        : Icons.thumb_up_outlined,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _likedReviewIds.contains(review.id)
+                                      ? 'Beğenildi'
+                                      : 'Yardımcı Oldu',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Hata: ${e.toString()}'),
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
+                        ),
+                ),
+                    const SizedBox(width: 12),
+                    // Beğeni sayısı (her zaman gösterilir)
+                    Text(
+                      review.helpfulCount > 0 
+                          ? '${review.helpfulCount} kişi bunu beğendi'
+                          : 'Henüz beğeni yok',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.thumb_up_outlined,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Yardımcı Oldu',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Beğenme sayısı
-                Text(
-                  '${review.helpfulCount} kişi bunu beğendi',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ],
         ],

@@ -326,8 +326,9 @@ public class OrderService {
         // Durum geçişi kontrolü
         validateStatusTransition(order.getStatus(), newStatus);
         
-        // PENDING → CONFIRMED geçişinde stokları rezerve et
-        if (order.getStatus() == OrderStatus.PENDING && newStatus == OrderStatus.CONFIRMED) {
+        // PENDING/PAYMENT_PENDING → CONFIRMED geçişinde stokları rezerve et
+        if ((order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PAYMENT_PENDING)
+                && newStatus == OrderStatus.CONFIRMED) {
             for (OrderItem item : order.getOrderItems()) {
                 try {
                     // Inventory bilgisini çek
@@ -359,6 +360,14 @@ public class OrderService {
             meterRegistry.counter("orders.delivered.count").increment();
         } else if (newStatus == OrderStatus.CANCELLED) {
             meterRegistry.counter("orders.cancelled.count").increment();
+        } else if (newStatus == OrderStatus.PAYMENT_FAILED) {
+            meterRegistry.counter("orders.payment.fail.count").increment();
+        } else if (newStatus == OrderStatus.PAYMENT_PENDING) {
+            meterRegistry.counter("orders.payment.pending.count").increment();
+        } else if (newStatus == OrderStatus.REFUND_REQUESTED) {
+            meterRegistry.counter("orders.refund.request.count").increment();
+        } else if (newStatus == OrderStatus.REFUNDED) {
+            meterRegistry.counter("orders.refunded.count").increment();
         }
         
         // RabbitMQ'ya OrderStatusChangedEvent gönder (asenkron)
@@ -389,6 +398,133 @@ public class OrderService {
         }
         
         return savedOrder;
+    }
+
+    /**
+     * Ödeme başlatıldı → PAYMENT_PENDING
+     */
+    @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")
+    public Order markPaymentPending(UUID orderId) {
+        Order order = getOrderById(orderId);
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(order.getStatus(), OrderStatus.PAYMENT_PENDING);
+        order.updateStatus(OrderStatus.PAYMENT_PENDING);
+        Order saved = orderRepository.save(order);
+        meterRegistry.counter("orders.status.change.count", "to", OrderStatus.PAYMENT_PENDING.name()).increment();
+        sendOrderStatusChangedEventSafe(saved, previous);
+        return saved;
+    }
+
+    /**
+     * Ödeme başarılı → CONFIRMED + stok rezervasyonu
+     */
+    @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")
+    public Order markPaymentSuccess(UUID orderId) {
+        Order order = getOrderById(orderId);
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(order.getStatus(), OrderStatus.CONFIRMED);
+
+        // Rezervasyon
+        for (OrderItem item : order.getOrderItems()) {
+            try {
+                InventoryServiceClient.InventoryResponse inventory =
+                    inventoryServiceClient.getInventoryByProductId(item.getProductId());
+                if (inventory != null) {
+                    inventoryServiceClient.reserveStock(inventory.getId(), item.getQuantity());
+                }
+            } catch (Exception e) {
+                System.err.println("Error reserving stock (payment success) for product " +
+                        item.getProductId() + ": " + e.getMessage());
+            }
+        }
+
+        order.updateStatus(OrderStatus.CONFIRMED);
+        Order saved = orderRepository.save(order);
+        meterRegistry.counter("orders.status.change.count", "to", OrderStatus.CONFIRMED.name()).increment();
+        meterRegistry.counter("orders.payment.success.count").increment();
+        sendOrderStatusChangedEventSafe(saved, previous);
+        return saved;
+    }
+
+    /**
+     * Ödeme başarısız → PAYMENT_FAILED + stok serbest
+     */
+    @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")
+    public Order markPaymentFailed(UUID orderId) {
+        Order order = getOrderById(orderId);
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(order.getStatus(), OrderStatus.PAYMENT_FAILED);
+
+        releaseStock(order);
+
+        order.updateStatus(OrderStatus.PAYMENT_FAILED);
+        Order saved = orderRepository.save(order);
+        meterRegistry.counter("orders.status.change.count", "to", OrderStatus.PAYMENT_FAILED.name()).increment();
+        meterRegistry.counter("orders.payment.fail.count").increment();
+        sendOrderStatusChangedEventSafe(saved, previous);
+        return saved;
+    }
+
+    /**
+     * İade talebi → REFUND_REQUESTED
+     */
+    @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")
+    public Order requestRefund(UUID orderId) {
+        Order order = getOrderById(orderId);
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(order.getStatus(), OrderStatus.REFUND_REQUESTED);
+        order.updateStatus(OrderStatus.REFUND_REQUESTED);
+        Order saved = orderRepository.save(order);
+        meterRegistry.counter("orders.status.change.count", "to", OrderStatus.REFUND_REQUESTED.name()).increment();
+        sendOrderStatusChangedEventSafe(saved, previous);
+        return saved;
+    }
+
+    /**
+     * İade onayı → REFUNDED + stok serbest
+     */
+    @Transactional
+    @CacheEvict(value = "orders", key = "#orderId.toString()")
+    public Order approveRefund(UUID orderId) {
+        Order order = getOrderById(orderId);
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(order.getStatus(), OrderStatus.REFUNDED);
+
+        releaseStock(order);
+
+        order.updateStatus(OrderStatus.REFUNDED);
+        Order saved = orderRepository.save(order);
+        meterRegistry.counter("orders.status.change.count", "to", OrderStatus.REFUNDED.name()).increment();
+        meterRegistry.counter("orders.refunded.count").increment();
+        sendOrderStatusChangedEventSafe(saved, previous);
+        return saved;
+    }
+
+    private void sendOrderStatusChangedEventSafe(Order savedOrder, OrderStatus oldStatus) {
+        try {
+            sendOrderStatusChangedEvent(savedOrder, oldStatus);
+        } catch (Exception e) {
+            System.err.println("Error sending OrderStatusChangedEvent: " + e.getMessage());
+        }
+    }
+
+    private void releaseStock(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            try {
+                InventoryServiceClient.InventoryResponse inventory =
+                    inventoryServiceClient.getInventoryByProductId(item.getProductId());
+                if (inventory != null) {
+                    inventoryServiceClient.releaseReservedStock(inventory.getId(), item.getQuantity());
+                }
+            } catch (Exception e) {
+                System.err.println("Error releasing stock for product " +
+                        item.getProductId() + ": " + e.getMessage());
+            }
+        }
     }
     
     /**
@@ -500,27 +636,11 @@ public class OrderService {
                 "Order is already cancelled.");
         }
         
-        // Eğer CONFIRMED durumundaysa, rezerve edilmiş stokları geri ver
-        if (order.getStatus() == OrderStatus.CONFIRMED) {
-            for (OrderItem item : order.getOrderItems()) {
-                try {
-                    // Inventory bilgisini çek
-                    InventoryServiceClient.InventoryResponse inventory = 
-                        inventoryServiceClient.getInventoryByProductId(item.getProductId());
-                    
-                    if (inventory != null) {
-                        // Rezerve edilmiş stoku geri ver
-                        inventoryServiceClient.releaseReservedStock(
-                            inventory.getId(), 
-                            item.getQuantity());
-                    }
-                } catch (Exception e) {
-                    // Log hatası ama sipariş iptal işlemini durdurma
-                    // Production'da logger kullanılmalı
-                    System.err.println("Error releasing stock for product " + 
-                        item.getProductId() + ": " + e.getMessage());
-                }
-            }
+        // CONFIRMED veya PAYMENT_PENDING/FAILED durumlarında stok serbest bırak
+        if (order.getStatus() == OrderStatus.CONFIRMED
+                || order.getStatus() == OrderStatus.PAYMENT_PENDING
+                || order.getStatus() == OrderStatus.PAYMENT_FAILED) {
+            releaseStock(order);
         }
         
         order.updateStatus(OrderStatus.CANCELLED);
@@ -552,9 +672,54 @@ public class OrderService {
         if (currentStatus == OrderStatus.DELIVERED) {
             throw new IllegalArgumentException("Cannot change status from DELIVERED");
         }
-        
-        // Geçerli durum geçişleri (basit kontrol, gelecekte daha detaylı yapılabilir)
-        // Şimdilik sadece CANCELLED ve DELIVERED kontrolü yapılıyor
+
+        // REFUNDED terminal
+        if (currentStatus == OrderStatus.REFUNDED) {
+            throw new IllegalArgumentException("Cannot change status from REFUNDED");
+        }
+
+        // PAYMENT_FAILED → sadece CANCELLED'a izin ver
+        if (currentStatus == OrderStatus.PAYMENT_FAILED && newStatus != OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Only cancellation allowed after PAYMENT_FAILED");
+        }
+
+        // PAYMENT_PENDING yalnızca PENDING'den
+        if (newStatus == OrderStatus.PAYMENT_PENDING) {
+            if (currentStatus != OrderStatus.PENDING) {
+                throw new IllegalArgumentException("PAYMENT_PENDING only allowed from PENDING");
+            }
+        }
+
+        // CONFIRMED yalnızca PENDING veya PAYMENT_PENDING'den
+        if (newStatus == OrderStatus.CONFIRMED) {
+            if (currentStatus != OrderStatus.PENDING && currentStatus != OrderStatus.PAYMENT_PENDING) {
+                throw new IllegalArgumentException("CONFIRMED only allowed from PENDING or PAYMENT_PENDING");
+            }
+        }
+
+        // PAYMENT_FAILED yalnızca PENDING veya PAYMENT_PENDING'den
+        if (newStatus == OrderStatus.PAYMENT_FAILED) {
+            if (currentStatus != OrderStatus.PENDING && currentStatus != OrderStatus.PAYMENT_PENDING) {
+                throw new IllegalArgumentException("PAYMENT_FAILED only allowed from PENDING or PAYMENT_PENDING");
+            }
+        }
+
+        // REFUND_REQUESTED yalnızca kargolama sonrası/öncesi belirli durumlar
+        if (newStatus == OrderStatus.REFUND_REQUESTED) {
+            if (currentStatus != OrderStatus.SHIPPED && currentStatus != OrderStatus.DELIVERED &&
+                currentStatus != OrderStatus.PROCESSING && currentStatus != OrderStatus.CONFIRMED) {
+                throw new IllegalArgumentException("REFUND_REQUESTED allowed after processing/shipped/delivered/confirmed");
+            }
+        }
+
+        // REFUNDED yalnızca REFUND_REQUESTED veya ilgili ileri durumlar
+        if (newStatus == OrderStatus.REFUNDED) {
+            if (currentStatus != OrderStatus.REFUND_REQUESTED && currentStatus != OrderStatus.SHIPPED
+                    && currentStatus != OrderStatus.DELIVERED && currentStatus != OrderStatus.PROCESSING
+                    && currentStatus != OrderStatus.CONFIRMED) {
+                throw new IllegalArgumentException("REFUNDED allowed after refund request or shipped/delivered");
+            }
+        }
     }
 }
 

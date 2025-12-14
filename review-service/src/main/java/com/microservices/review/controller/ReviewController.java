@@ -40,12 +40,19 @@ public class ReviewController {
     
     /**
      * Ürüne ait yorumları getir
-     * GET /reviews/product/{productId}
+     * GET /reviews/product/{productId}?userId={userId}
+     * userId optional - eğer verilirse, kullanıcının hangi review'ları beğendiği bilgisi de döner
+     * userId String formatında (örn: "user_123456")
      */
     @GetMapping("/product/{productId}")
-    @Operation(summary = "Get reviews by product ID", description = "Belirli bir ürüne ait tüm yorumları getirir")
-    public ResponseEntity<List<Review>> getReviewsByProductId(@PathVariable("productId") UUID productId) {
-        List<Review> reviews = reviewService.getReviewsByProductId(productId);
+    @Operation(summary = "Get reviews by product ID", description = "Belirli bir ürüne ait tüm yorumları getirir. userId parametresi ile kullanıcının beğenme durumu da döner.")
+    public ResponseEntity<List<Review>> getReviewsByProductId(
+            @PathVariable("productId") UUID productId,
+            @RequestParam(value = "userId", required = false) String visitorId) {
+        System.out.println("🔍 getReviewsByProductId Controller:");
+        System.out.println("   Product ID: " + productId);
+        System.out.println("   Visitor ID: " + visitorId);
+        List<Review> reviews = reviewService.getReviewsByProductId(productId, visitorId);
         return ResponseEntity.ok(reviews);
     }
     
@@ -127,13 +134,45 @@ public class ReviewController {
     
     /**
      * Yorum için "Yardımcı Oldu" işaretle
-     * POST /reviews/{reviewId}/helpful
+     * POST /reviews/{reviewId}/helpful?userId={userId}
+     * 
+     * Not: Production'da userId genellikle JWT token'dan alınır
+     * Şimdilik query parameter olarak alıyoruz
      */
     @PostMapping("/{reviewId}/helpful")
-    @Operation(summary = "Mark review as helpful", description = "Bir yorumu 'Yardımcı Oldu' olarak işaretler")
-    public ResponseEntity<Review> markAsHelpful(@PathVariable("reviewId") UUID reviewId) {
-        Review review = reviewService.markAsHelpful(reviewId);
-        return ResponseEntity.ok(review);
+    @Operation(summary = "Mark review as helpful", description = "Bir yorumu 'Yardımcı Oldu' olarak işaretler. Kullanıcı bazında takip edilir.")
+    public ResponseEntity<Review> markAsHelpful(
+            @PathVariable("reviewId") UUID reviewId,
+            @RequestParam("userId") String visitorId) {
+        try {
+            System.out.println("🔍 markAsHelpful Controller çağrısı:");
+            System.out.println("   Review ID: " + reviewId);
+            System.out.println("   Visitor ID: " + visitorId);
+            
+            Review review = reviewService.markAsHelpful(reviewId, visitorId);
+            
+            System.out.println("✅ markAsHelpful başarılı:");
+            System.out.println("   Review ID: " + review.getId());
+            System.out.println("   Helpful Count: " + review.getHelpfulCount());
+            
+            return ResponseEntity.ok(review);
+        } catch (IllegalStateException e) {
+            // Kullanıcı daha önce beğenmiş
+            System.out.println("⚠️ IllegalStateException: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(null);
+        } catch (IllegalArgumentException e) {
+            // Yorum bulunamadı
+            System.out.println("⚠️ IllegalArgumentException: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(null);
+        } catch (Exception e) {
+            // Diğer hatalar
+            System.out.println("❌ Exception: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(null);
+        }
     }
 }
 

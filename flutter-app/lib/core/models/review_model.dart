@@ -9,6 +9,7 @@ class Review {
   final int helpfulCount;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool likedByUser; // Kullanıcı bu yorumu beğenmiş mi?
 
   Review({
     required this.id,
@@ -21,6 +22,7 @@ class Review {
     this.helpfulCount = 0,
     required this.createdAt,
     required this.updatedAt,
+    this.likedByUser = false,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class Review {
               : 0,
       createdAt: _parseDateTime(json['createdAt']),
       updatedAt: _parseDateTime(json['updatedAt']),
+      likedByUser: json['likedByUser'] ?? false,
     );
   }
 
@@ -58,6 +61,7 @@ class Review {
       'helpfulCount': helpfulCount,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'likedByUser': likedByUser,
     };
   }
 

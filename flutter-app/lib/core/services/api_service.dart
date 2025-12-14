@@ -134,11 +134,16 @@ class ApiService {
     }
   }
 
-  Future<List<Review>> getReviewsByProductId(String productId) async {
+  Future<List<Review>> getReviewsByProductId(String productId, {String? userId}) async {
     try {
       // Use direct review-service URL to avoid CORS issues
+      // userId parametresi ile kullanıcının beğenme durumu da döner
+      final uri = userId != null && userId.isNotEmpty
+          ? Uri.parse('$reviewServiceUrl/reviews/product/$productId?userId=$userId')
+          : Uri.parse('$reviewServiceUrl/reviews/product/$productId');
+      
       final response = await http.get(
-        Uri.parse('$reviewServiceUrl/reviews/product/$productId'),
+        uri,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -221,10 +226,18 @@ class ApiService {
   }
 
   /// Mark a review as helpful
-  Future<Review> markReviewAsHelpful(String reviewId) async {
+  /// userId: The ID of the user marking the review as helpful
+  /// Note: In production, this should come from authentication context
+  Future<Review> markReviewAsHelpful(String reviewId, String userId) async {
     try {
+      final url = '$reviewServiceUrl/reviews/$reviewId/helpful?userId=$userId';
+      print('📤 markReviewAsHelpful çağrısı:');
+      print('   URL: $url');
+      print('   Review ID: $reviewId');
+      print('   User ID: $userId');
+      
       final response = await http.post(
-        Uri.parse('$baseUrlV1/reviews/$reviewId/helpful'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -232,17 +245,37 @@ class ApiService {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
+          print('❌ API request timeout');
           throw Exception('API request timeout');
         },
       );
 
+      print('📥 Response alındı:');
+      print('   Status Code: ${response.statusCode}');
+      print('   Body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+
       if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          print('⚠️ Response body boş!');
+          throw Exception('Empty response from server');
+        }
         final Map<String, dynamic> data = json.decode(response.body);
-        return Review.fromJson(data);
+        final review = Review.fromJson(data);
+        print('✅ Review parse edildi: helpfulCount = ${review.helpfulCount}');
+        return review;
+      } else if (response.statusCode == 409) {
+        print('⚠️ 409 Conflict: Already liked');
+        throw Exception('You have already marked this review as helpful');
+      } else if (response.statusCode == 404) {
+        print('⚠️ 404 Not Found: Review not found');
+        throw Exception('Review not found');
       } else {
-        throw Exception('Failed to mark review as helpful: HTTP ${response.statusCode}');
+        print('❌ Unexpected status code: ${response.statusCode}');
+        print('   Response body: ${response.body}');
+        throw Exception('Failed to mark review as helpful: HTTP ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      print('❌ markReviewAsHelpful hatası: $e');
       throw Exception('Error marking review as helpful: $e');
     }
   }
